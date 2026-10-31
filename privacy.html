@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>개인정보 처리 안내 · 놀코딩</title>
+  <meta name="description" content="가입 없이 브라우저에서 실행하는 놀코딩의 개인정보 처리 안내입니다.">
+  <meta name="theme-color" content="#b9e6c4">
+  <link rel="icon" type="image/svg+xml" href="assets/knolcoding-mark.svg">
+  <link rel="stylesheet" href="style.css">
+  <link rel="canonical" href="https://coding.knolquiz.com/privacy.html">
+  <script type="module" src="privacy.mjs"></script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/" aria-label="놀코딩 홈"><img class="brand-mark" src="assets/knolcoding-mark.svg" width="56" height="56" alt=""><span class="brand-name">놀코딩<span class="brand-caption">KNOL CODING</span></span></a>
+  <a class="privacy-link" href="/">놀코딩 열기 ↗</a>
+</header>
+<main class="privacy-page">
+  <div class="privacy-intro">
+    <p class="privacy-kicker">가입 없이 바로 하는 코딩 활동</p>
+    <h1>개인정보 처리 안내</h1>
+    <p>놀코딩은 이름, 이메일, 연락처를 받지 않습니다.<br>활동 기록은 지금 쓰는 기기의 브라우저에만 남습니다.</p>
+    <span>운영: 놀퀴즈 · 안내 기준일: 2026년 10월 31일</span>
+  </div>
+  <section class="privacy-card">
+    <h2>1. 회원가입과 개인정보 입력이 없어요</h2>
+    <p>놀코딩의 활동에는 로그인이나 개인정보를 입력하는 절차가 없습니다. 학생이 만든 명령어와 문제는 운영자의 서버나 데이터베이스로 보내지 않습니다.</p>
+  </section>
+  <section class="privacy-card">
+    <h2>2. 학습 진행 기록만 내 브라우저에 남아요</h2>
+    <p>모눈종이 코딩 놀이터는 이어서 배울 수 있도록 마친 교육 단계와 마지막 진행 상태를 이 기기의 브라우저 저장 공간(localStorage)에 저장합니다. 공용 컴퓨터에서는 수업을 마친 뒤 아래 버튼으로 지워 주세요.</p>
+    <button class="privacy-clear" id="clear-progress" type="button">이 기기의 학습 진행 기록 삭제</button>
+    <p id="privacy-status" role="status" aria-live="polite"></p>
+  </section>
+  <section class="privacy-card">
+    <h2>3. 문제 공유 링크와 QR 코드</h2>
+    <p>나만의 문제를 공유하면 문제 내용이 링크 주소 안에 담깁니다. 링크를 받은 사람은 누구나 같은 문제를 열 수 있으니, 링크에 개인정보를 적지 마세요.</p>
+    <p>공유 화면의 QR 코드 그림은 외부 서비스(api.qrserver.com)가 만듭니다. 이때 공유 링크 주소가 해당 서비스로 전달됩니다.</p>
+  </section>
+  <section class="privacy-card">
+    <h2>4. 광고와 방문 추적 기능이 없어요</h2>
+    <p>놀코딩에는 광고, 방문자 분석, 행동 추적 도구를 넣지 않았습니다. 알고리즘 놀이터는 화면을 그리기 위해 공개 CDN(unpkg.com, cdn.tailwindcss.com)에서 프로그램 파일을 받아옵니다.</p>
+  </section>
+  <section class="privacy-card">
+    <h2>5. 사이트 접속 정보</h2>
+    <p>사이트는 Cloudflare Pages로 제공합니다. 페이지를 받아오는 과정에서 호스팅 제공자와 위 CDN이 보안과 서비스 제공을 위해 IP 주소 같은 기술적 접속 정보를 처리할 수 있습니다. 자세한 내용은 <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">Cloudflare 개인정보 처리방침 ↗</a>에서 확인할 수 있습니다.</p>
+  </section>
+  <footer><a class="footer-brand" href="/" aria-label="놀코딩 홈"><img src="assets/knolcoding-mark.svg" width="28" height="28" alt=""><span>놀코딩</span></a><span>© 2026 놀퀴즈</span></footer>
+</main>
+</body>
+</html>
