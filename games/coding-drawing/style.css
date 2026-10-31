@@ -4659,3 +4659,55 @@ button, select, input, .dir-btn, .learning-mode-btn, .activity-tab-btn {
   outline: 3px solid #1d4ed8;
   outline-offset: 2px;
 }
+
+/* 미사일 학습 보조: 틀린 명령 고치기 · 실행 전에 예측하기 */
+.learning-aid-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: stretch;
+  margin-top: 8px;
+}
+
+.learning-aid-controls > * {
+  min-width: 0;
+}
+
+.learning-aid-controls .learning-aid-btn {
+  flex: 1 1 150px;
+}
+
+.learning-aid-controls .learning-aid-toggle {
+  flex: 1 1 200px;
+  border-color: rgba(192, 132, 252, 0.4);
+  background: rgba(88, 28, 135, 0.18);
+  color: #f3e8ff;
+}
+
+.learning-aid-controls .learning-aid-toggle input {
+  accent-color: #c084fc;
+}
+
+.learning-aid-controls .learning-aid-toggle:focus-within,
+.learning-aid-controls .learning-aid-toggle:hover {
+  border-color: rgba(192, 132, 252, 0.85);
+  box-shadow: 0 0 10px rgba(192, 132, 252, 0.25);
+}
+
+.prediction-wait-controls {
+  margin-top: 8px;
+}
+
+.prediction-wait-controls > .btn {
+  min-height: 44px;
+}
+
+#grid-canvas.awaiting-prediction {
+  cursor: crosshair;
+  outline: 3px dashed rgba(192, 132, 252, 0.8);
+  outline-offset: 2px;
+}
+
+.learning-aid-controls .learning-aid-toggle small {
+  color: #e9d5ff;
+}

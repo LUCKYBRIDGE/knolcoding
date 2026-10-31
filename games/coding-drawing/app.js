@@ -33,6 +33,15 @@ import {
   normalizeMainProgram,
   normalizeMoveCommands
 } from './pattern-engine.js';
+import {
+  PREDICT_BEFORE_RUN_STORAGE_KEY,
+  createBuggyMissileProgram,
+  formatPredictionResultLine,
+  isDebugProgramAvailable,
+  isPredictBeforeRunAvailable,
+  parsePredictBeforeRunSetting,
+  serializePredictBeforeRunSetting
+} from './learning-aids.js';
 
 export const ACTIVITY_MODES = Object.freeze([
   'efficiency',
@@ -1262,6 +1271,12 @@ export function appendPenCommand(commands = [], dirKey) {
   return nextCommands;
 }
 
+function getOptionalElement(id) {
+  return typeof document !== 'undefined' && typeof document.getElementById === 'function'
+    ? document.getElementById(id)
+    : null;
+}
+
 export class App {
   constructor() {
     this.canvas = document.getElementById('grid-canvas');
@@ -1331,6 +1346,12 @@ export class App {
     this.commandBlockEditTarget = 'main';
     this.modalReturnFocus = null;
     this.isRestoringEducationProgress = false;
+    // 미사일 학습 보조 상태 (틀린 명령 고치기 · 실행 전에 예측하기)
+    this.debugProgramLoaded = false;
+    this.predictBeforeRun = this.readPredictBeforeRunSetting();
+    this.isAwaitingPrediction = false;
+    this.pendingPrediction = null;
+    this.learningRunContext = null;
     const restoredEducationProgress = this.restoreEducationProgress();
 
     this.initUI();
@@ -1930,6 +1951,10 @@ export class App {
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Escape') {
         const activeModal = document.querySelector('.modal-backdrop.active');
+        if (!activeModal && this.cancelPredictionWait()) {
+          e.preventDefault();
+          return;
+        }
         if (activeModal) {
           e.preventDefault();
           this.closeModal(activeModal.id);
@@ -2025,6 +2050,12 @@ export class App {
     document.getElementById('run-btn').addEventListener('click', () => this.runSimulation());
     document.getElementById('submit-draw-btn')?.addEventListener('click', () => this.evaluateStudentDrawSubmission());
     document.getElementById('reset-btn').addEventListener('click', () => this.resetLevel());
+    document.getElementById('debug-program-btn')?.addEventListener('click', () => this.loadDebugProgram());
+    document.getElementById('predict-before-run-toggle')?.addEventListener('change', event => {
+      this.setPredictBeforeRun(event.target.checked);
+    });
+    document.getElementById('prediction-skip-btn')?.addEventListener('click', () => this.skipPrediction());
+    document.getElementById('prediction-cancel-btn')?.addEventListener('click', () => this.cancelPredictionWait());
     document.getElementById('fixed-draw-submit-btn')?.addEventListener('click', () => this.evaluateStudentDrawSubmission());
     document.getElementById('fixed-draw-reset-btn')?.addEventListener('click', () => this.resetLevel());
     document.getElementById('student-undo-btn')?.addEventListener('click', () => this.undoStudentDrawStep());
@@ -2157,6 +2188,7 @@ export class App {
     if (suspendActivity) {
       this.executionId += 1;
       this.isExecuting = false;
+      this.clearLearningAidState();
       this.stopChallengeTimer();
       this.closeAllModals();
       this.saveEducationProgress({ active: false });
@@ -4693,6 +4725,15 @@ export class App {
 
   handleCanvasClick(e) {
     if (this.isExecuting) return;
+    if (this.isAwaitingPrediction) {
+      const rect = this.canvas.getBoundingClientRect();
+      const touch = e.changedTouches?.[0] || e.touches?.[0] || null;
+      const clientX = touch ? touch.clientX : e.clientX;
+      const clientY = touch ? touch.clientY : e.clientY;
+      if (clientX === undefined || clientY === undefined) return;
+      this.acceptPrediction(this.renderer.pixelToGrid(clientX - rect.left, clientY - rect.top));
+      return;
+    }
     if (this.currentMode !== 'creator') return;
 
     const rect = this.canvas.getBoundingClientRect();
@@ -5052,6 +5093,7 @@ export class App {
   }
 
   loadLevel() {
+    this.clearLearningAidState();
     getRequiredProblemBankModes(this.currentMode, this.challengeType)
       .forEach(mode => ensurePresetProblemBankMode(mode));
     this.executionId = (this.executionId || 0) + 1;
@@ -5323,6 +5365,7 @@ export class App {
     this.updateStudentHistoryControls();
     this.updateStepCounter();
     this.updatePenStateUI();
+    this.updateLearningAidControls();
     this.saveEducationProgress({ active: this.isEducationMode() });
   }
 
@@ -6144,8 +6187,20 @@ export class App {
     });
   }
 
-  async runSimulation() {
+  async runSimulation({ skipPrediction = false } = {}) {
     if (this.isExecuting || this.commands.length === 0 || this.isFixedCommandDrawingMode()) return;
+
+    const usesPrediction = this.canUsePredictBeforeRun() && this.predictBeforeRun;
+    if (usesPrediction && !skipPrediction && !this.pendingPrediction) {
+      if (this.isAwaitingPrediction) {
+        this.setStatus('🔮 미사일이 멈출 칸을 모눈종이에서 눌러 보세요.', 'info');
+      } else {
+        this.startPredictionWait();
+      }
+      return;
+    }
+    const prediction = usesPrediction ? this.pendingPrediction : null;
+    this.clearPredictionState({ keepMarker: Boolean(prediction) });
 
     let patternProgramAnalysis = null;
     if (this.isPatternEducationActive()) {
@@ -6181,6 +6236,15 @@ export class App {
 
     const execId = ++this.executionId;
     this.isExecuting = true;
+    this.learningRunContext = (prediction || this.debugProgramLoaded)
+      ? {
+          execId,
+          debugLoaded: this.debugProgramLoaded && this.canUseDebugProgram(),
+          prediction: prediction ? { ...prediction } : null,
+          gridSize: this.currentLevel?.gridSize || this.renderer.gridSize,
+          finalPos: null
+        }
+      : null;
     this.pauseChallengeTimer('simulation');
     this.setStatus('👀 모눈종이 화면으로 이동한 뒤 명령을 실행합니다.', 'info');
 
@@ -6218,6 +6282,9 @@ export class App {
         isBrushMode && this.usesExplicitPenStartCommand() ? false : true
       );
       result.programAnalysis = patternProgramAnalysis;
+      if (this.learningRunContext?.execId === execId) {
+        this.learningRunContext.finalPos = { ...result.finalPos };
+      }
       const stepDelay = result.lines.length > 50
         ? 90
         : (result.lines.length > 24 ? 140 : 240);
@@ -7475,6 +7542,12 @@ export class App {
   }
 
   showResultModal({ isSuccess, icon, title, desc, badge, primaryBtnText, onPrimary, secondaryBtnText, onSecondary }) {
+    ({ desc, primaryBtnText, onPrimary } = this.applyLearningRunContext({
+      isSuccess,
+      desc,
+      primaryBtnText,
+      onPrimary
+    }));
     if (this.challengeType === 'timeattack') {
       this.pauseChallengeTimer('result-modal');
     }
@@ -7520,7 +7593,183 @@ export class App {
     this.openModal('result-modal', 'result-title');
   }
 
+  readPredictBeforeRunSetting() {
+    try {
+      return parsePredictBeforeRunSetting(
+        this.getEducationStorage()?.getItem(PREDICT_BEFORE_RUN_STORAGE_KEY) ?? null
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  setPredictBeforeRun(enabled) {
+    this.predictBeforeRun = enabled === true;
+    try {
+      this.getEducationStorage()?.setItem(
+        PREDICT_BEFORE_RUN_STORAGE_KEY,
+        serializePredictBeforeRunSetting(this.predictBeforeRun)
+      );
+    } catch {
+      // 저장소를 쓸 수 없어도 이번 접속 동안은 설정이 유지된다.
+    }
+    if (!this.predictBeforeRun) this.clearPredictionState();
+    this.updateLearningAidControls();
+  }
+
+  canUseDebugProgram() {
+    return isDebugProgramAvailable(this.currentMode, this.challengeType) && Boolean(this.currentLevel?.goalPos);
+  }
+
+  canUsePredictBeforeRun() {
+    return isPredictBeforeRunAvailable(this.currentMode, this.challengeType) && Boolean(this.currentLevel?.goalPos);
+  }
+
+  updateLearningAidControls() {
+    const container = getOptionalElement('learning-aid-controls');
+    const debugButton = getOptionalElement('debug-program-btn');
+    const predictControl = getOptionalElement('predict-before-run-control');
+    const predictToggle = getOptionalElement('predict-before-run-toggle');
+    const waitControls = getOptionalElement('prediction-wait-controls');
+    const canDebug = this.canUseDebugProgram();
+    const canPredict = this.canUsePredictBeforeRun();
+
+    if (container) container.hidden = !(canDebug || canPredict);
+    if (debugButton) {
+      debugButton.hidden = !canDebug;
+      debugButton.disabled = !canDebug;
+    }
+    if (predictControl) predictControl.hidden = !canPredict;
+    if (predictToggle) {
+      predictToggle.checked = this.predictBeforeRun;
+      predictToggle.disabled = !canPredict;
+    }
+    if (waitControls) waitControls.hidden = !this.isAwaitingPrediction;
+    this.canvas?.classList?.toggle('awaiting-prediction', this.isAwaitingPrediction);
+  }
+
+  clearPredictionState({ keepMarker = false } = {}) {
+    this.isAwaitingPrediction = false;
+    this.pendingPrediction = null;
+    if (!keepMarker) this.renderer?.setPredictionMarker?.(null);
+    const waitControls = getOptionalElement('prediction-wait-controls');
+    if (waitControls) waitControls.hidden = true;
+    this.canvas?.classList?.remove('awaiting-prediction');
+  }
+
+  clearLearningAidState() {
+    this.debugProgramLoaded = false;
+    this.learningRunContext = null;
+    this.clearPredictionState();
+  }
+
+  loadDebugProgram() {
+    if (this.isExecuting || !this.canUseDebugProgram()) return false;
+    const program = createBuggyMissileProgram(this.currentLevel, Math.random, {
+      solutionRule: getActiveMissileSolutionRule(this.challengeType, this.missileSolutionRule)
+    });
+    if (!program) {
+      Audio.playError();
+      this.setStatus('🐞 이 문제에서는 틀린 명령을 만들 수 없어요. 다른 문제에서 해 보세요.', 'error');
+      return false;
+    }
+
+    // 미사일·화면·명령 큐를 처음 상태로 되돌린 뒤 명령 입력과 같은 경로로 큐를 채운다.
+    this.closeAllModals();
+    this.resetLevel();
+    this.setActiveCommandBlockList(this.sanitizeStoredCommands(program.commands));
+    this.updateCommandBlockWorkspace();
+    this.updateCreatorInterface();
+    this.renderCommandQueue();
+    this.updateStepCounter();
+    this.debugProgramLoaded = true;
+    Audio.playAddCommand();
+    this.setStatus('🐞 명령 하나가 틀렸어요. 먼저 실행해 보고, 어디서 틀렸는지 찾아 고쳐 보세요.', 'info');
+    return true;
+  }
+
+  startPredictionWait() {
+    this.isAwaitingPrediction = true;
+    this.pendingPrediction = null;
+    this.renderer?.setPredictionMarker?.(null);
+    this.updateLearningAidControls();
+    this.setStatus('🔮 미사일이 멈출 칸을 모눈종이에서 눌러 보세요.', 'info');
+    const target = this.canvas?.closest?.('.canvas-wrapper') || this.canvas;
+    target?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+  }
+
+  acceptPrediction(grid) {
+    if (!this.isAwaitingPrediction || !grid) return;
+    this.isAwaitingPrediction = false;
+    this.pendingPrediction = { x: grid.x, y: grid.y };
+    this.renderer?.setPredictionMarker?.(this.pendingPrediction);
+    this.updateLearningAidControls();
+    Audio.playStep();
+    this.runSimulation();
+  }
+
+  skipPrediction() {
+    if (!this.isAwaitingPrediction) return;
+    this.clearPredictionState();
+    this.updateLearningAidControls();
+    this.runSimulation({ skipPrediction: true });
+  }
+
+  cancelPredictionWait() {
+    if (!this.isAwaitingPrediction) return false;
+    this.clearPredictionState();
+    this.updateLearningAidControls();
+    this.setStatus('🔮 예측을 취소했어요. 준비되면 다시 [실행하기]를 누르세요.', 'info');
+    return true;
+  }
+
+  /** 결과창 설명에 학습 보조 문장을 붙이고, 이번 실행의 보조 상태를 정리한다. */
+  applyLearningRunContext({ isSuccess, desc, primaryBtnText, onPrimary }) {
+    const context = this.learningRunContext;
+    if (!context || context.execId !== this.executionId) {
+      return { desc, primaryBtnText, onPrimary };
+    }
+    this.learningRunContext = null;
+    let nextDesc = desc;
+    let nextPrimaryText = primaryBtnText;
+    let nextPrimary = onPrimary;
+
+    if (context.debugLoaded && isSuccess) {
+      nextDesc = `<b>🐞 오류를 고쳤어요!</b><br>${nextDesc}`;
+      this.debugProgramLoaded = false;
+    } else if (context.debugLoaded) {
+      // 실패해도 틀린 프로그램을 지우지 않고 이어서 고칠 수 있게 한다.
+      nextPrimaryText = '🐞 명령 고치러 가기';
+      nextPrimary = () => this.returnMissileToStart();
+    }
+
+    if (context.prediction && context.finalPos) {
+      const line = formatPredictionResultLine(
+        context.prediction,
+        context.finalPos,
+        context.gridSize
+      );
+      nextDesc = `${nextDesc}<br><br>${line}`;
+    }
+    this.pendingPrediction = null;
+    return { desc: nextDesc, primaryBtnText: nextPrimaryText, onPrimary: nextPrimary };
+  }
+
+  returnMissileToStart() {
+    const level = this.currentLevel || {};
+    if (!level.starPos) return;
+    this.renderer.cancelEffects?.();
+    this.renderer.clearDrawnLines();
+    this.renderer.starAngle = 0;
+    this.renderer.setStarPos(level.starPos.x, level.starPos.y);
+    this.renderer.setVisitedCheckpointCount?.(0);
+    this.renderer.setVisitedFuelCount?.(0);
+    this.renderer.setPredictionMarker?.(null);
+    this.setStatus('🐞 미사일을 출발점으로 돌려놓았어요. 명령을 하나씩 따라가며 틀린 곳을 고쳐 보세요.', 'info');
+  }
+
   resetLevel() {
+    this.clearLearningAidState();
     this.executionId = (this.executionId || 0) + 1;
     this.isExecuting = false;
     this.renderer.cancelEffects?.();
@@ -7576,6 +7825,7 @@ export class App {
     this.updateStudentHistoryControls();
     this.updateStepCounter();
     this.updatePenStateUI();
+    this.updateLearningAidControls();
     this.saveEducationProgress({ active: this.isEducationMode() });
     document.querySelectorAll('.command-chip.active-step, .thief-arrow-chip.active-turn').forEach(element => {
       element.classList.remove('active-step', 'active-turn');

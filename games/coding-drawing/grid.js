@@ -77,6 +77,7 @@ export class GridRenderer {
     this.thiefPos = options.thiefPos || null; // 도둑 위치 (🦹‍♂️)
     this.handcuffPos = options.handcuffPos || null; // 경찰이 먼저 획득해야 하는 수갑 위치
     this.showTargetGuide = true; // Mode 4 (명령어 따라 그림 그리기)에서는 보조선 숨김
+    this.predictionMarker = null; // 실행 전에 예측한 멈춤 칸 {x, y}
     
     this.setupResizeObserver();
   }
@@ -261,6 +262,13 @@ export class GridRenderer {
     if (dx !== 0 || dy !== 0) {
       this.starAngle = Math.atan2(dy, dx) + Math.PI / 4;
     }
+    this.render();
+  }
+
+  setPredictionMarker(pos = null) {
+    this.predictionMarker = (
+      pos && Number.isInteger(pos.x) && Number.isInteger(pos.y)
+    ) ? { x: pos.x, y: pos.y } : null;
     this.render();
   }
 
@@ -641,6 +649,20 @@ export class GridRenderer {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('🎯', px, py);
+      ctx.restore();
+    }
+
+    // 5.2 실행 전에 예측한 멈춤 칸 (점선 원)
+    if (this.predictionMarker) {
+      const { px, py } = this.gridToPixel(this.predictionMarker.x, this.predictionMarker.y);
+      ctx.save();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#c084fc';
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath();
+      ctx.arc(px, py, Math.max(6, this.cellSize * 0.4), 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
       ctx.restore();
     }
 

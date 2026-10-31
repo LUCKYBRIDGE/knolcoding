@@ -447,6 +447,10 @@
       <div class="canvas-wrapper">
         <canvas id="grid-canvas" tabindex="0" aria-label="좌표와 게임 요소가 표시되는 모눈종이. 방향 버튼, 키보드 또는 드래그로 조작합니다."></canvas>
       </div>
+      <div id="prediction-wait-controls" class="controls-row prediction-wait-controls" role="group" aria-label="실행 전 예측" hidden>
+        <button id="prediction-skip-btn" class="btn btn-secondary" type="button">▶ 예측 없이 실행</button>
+        <button id="prediction-cancel-btn" class="btn btn-secondary" type="button">✖ 예측 취소 (Esc)</button>
+      </div>
 
       <!-- 그림 그리기 전용 붓 경로 힌트 토글 및 한 칸 되돌리기/앞으로 -->
       <div id="student-history-controls" class="student-history-controls" role="group" aria-label="그림 그리기 도구">
@@ -628,6 +632,18 @@
         <button id="run-btn" class="btn btn-primary" title="입력한 명령어를 모눈종이에 연산 처리 및 출력합니다">⚙️ [처리] 실행하기</button>
         <button id="submit-draw-btn" class="btn btn-primary" style="display: none; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-color: #34d399;">✅ [출력] 그림 완성 제출</button>
         <button id="reset-btn" class="btn btn-secondary">🧹 처음부터</button>
+      </div>
+
+      <!-- 미사일 이동·장애물 피하기 학습 보조 -->
+      <div id="learning-aid-controls" class="learning-aid-controls" hidden>
+        <button id="debug-program-btn" class="btn btn-secondary learning-aid-btn" type="button" title="정답에서 명령 하나만 틀리게 바꾼 프로그램을 불러옵니다">🐞 틀린 명령 고치기</button>
+        <label id="predict-before-run-control" class="shortest-rule-control learning-aid-toggle" for="predict-before-run-toggle">
+          <input id="predict-before-run-toggle" type="checkbox">
+          <span class="shortest-rule-copy">
+            <strong>🔮 실행 전에 예측하기</strong>
+            <small>실행하기 전에 미사일이 멈출 칸을 먼저 골라요</small>
+          </span>
+        </label>
       </div>
 
       <!-- 창작자 전용 공유·활동지 출력 -->
