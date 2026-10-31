@@ -95,7 +95,7 @@ const ACTIVITY_LABELS = Object.freeze({
   shortest: '미사일 이동',
   routing: '장애물 피하기',
   debug: '그림 보고 명령어 만들기',
-  debug_guide: '명령 보고 그림 그리기',
+  debug_guide: '명령어 보고 그림 그리기',
   single_stroke: '한붓그리기',
   creator: '나만의 문제 만들기',
   chase: '도둑 잡기',
@@ -121,7 +121,7 @@ const ACTIVITY_DISPLAY_LABELS = Object.freeze({
   shortest: '1. 미사일 이동',
   routing: '2. 장애물 피하기',
   debug: '3. 그림 보고 명령어 만들기',
-  debug_guide: '4. 명령 보고 그림 그리기',
+  debug_guide: '4. 명령어 보고 그림 그리기',
   single_stroke: '🎨 한붓그리기',
   creator: '5. 나만의 문제 만들기',
   chase: '6. 도둑 잡기',
@@ -849,7 +849,7 @@ export const PRESET_LEVELS = {
   debug: [
     // 🌱 입문 5x5 단계
     {
-      title: '🌱 그림 문제 1 (5x5)',
+      title: '🌱 명령어 만들기 문제 1 (5x5)',
       gridSize: 5,
       starPos: { x: 1, y: 3 },
       targetLines: [
@@ -857,11 +857,11 @@ export const PRESET_LEVELS = {
         { fromX: 1, fromY: 1, toX: 3, toY: 3 },
         { fromX: 3, fromY: 3, toX: 1, toY: 3 }
       ],
-      guide: '🎨 [그림 보고 만들기]: 5x5 모눈종이 위 🔺 삼각형 밑그림을 보고 붓을 움직여 똑같이 그려내세요!'
+      guide: '🎨 [그림 보고 명령어 만들기]: 5x5 모눈종이 위 🔺 삼각형 밑그림을 보고 붓을 움직여 똑같이 그려내세요!'
     },
     // 🌿 표준 7x7 단계
     {
-      title: '🌿 그림 문제 2 (7x7)',
+      title: '🌿 명령어 만들기 문제 2 (7x7)',
       gridSize: 7,
       starPos: { x: 1, y: 5 },
       targetLines: [
@@ -871,10 +871,10 @@ export const PRESET_LEVELS = {
         { fromX: 5, fromY: 2, toX: 5, toY: 5 },
         { fromX: 5, fromY: 5, toX: 1, toY: 5 }
       ],
-      guide: '🎨 [그림 보고 만들기]: 모눈종이에 표시된 집 밑그림(🏠)을 보고 붓(🖌️)을 움직여 똑같이 그려내세요!'
+      guide: '🎨 [그림 보고 명령어 만들기]: 모눈종이에 표시된 집 밑그림(🏠)을 보고 붓(🖌️)을 움직여 똑같이 그려내세요!'
     },
     {
-      title: '🌿 그림 문제 3 (7x7)',
+      title: '🌿 명령어 만들기 문제 3 (7x7)',
       gridSize: 7,
       starPos: { x: 1, y: 5 },
       targetLines: [
@@ -886,11 +886,11 @@ export const PRESET_LEVELS = {
         { fromX: 5, fromY: 1, toX: 5, toY: 5 },
         { fromX: 5, fromY: 5, toX: 1, toY: 5 }
       ],
-      guide: '🎨 [그림 보고 만들기]: 뾰족한 왕관 컵(👑) 밑그림을 따라 그리도록 이동 명령어를 조립하세요!'
+      guide: '🎨 [그림 보고 명령어 만들기]: 뾰족한 왕관 컵(👑) 밑그림을 따라 그리도록 이동 명령어를 조립하세요!'
     },
     // 🔥 도전 9x9 단계
     {
-      title: '🔥 그림 문제 4 (9x9)',
+      title: '🔥 명령어 만들기 문제 4 (9x9)',
       gridSize: 9,
       starPos: { x: 4, y: 1 },
       targetLines: [
@@ -899,10 +899,10 @@ export const PRESET_LEVELS = {
         { fromX: 4, fromY: 7, toX: 1, toY: 4 },
         { fromX: 1, fromY: 4, toX: 4, toY: 1 }
       ],
-      guide: '🎨 [그림 보고 만들기]: 9x9 모눈종이에 그려진 웅장한 다이아몬드 타워(💎)를 완성해 보세요!'
+      guide: '🎨 [그림 보고 명령어 만들기]: 9x9 모눈종이에 그려진 웅장한 다이아몬드 타워(💎)를 완성해 보세요!'
     },
     {
-      title: '🚀 확장 그림 문제 5 (11x11)',
+      title: '🚀 확장 명령어 만들기 문제 5 (11x11)',
       gridSize: 11,
       starPos: { x: 2, y: 8 },
       targetLines: [
@@ -912,13 +912,13 @@ export const PRESET_LEVELS = {
         { fromX: 8, fromY: 4, toX: 8, toY: 8 },
         { fromX: 8, fromY: 8, toX: 2, toY: 8 }
       ],
-      guide: '🎨 [그림 보고 만들기]: 11x11 확장 모눈종이에 제시된 큰 밑그림의 모든 선을 완성해 보세요!'
+      guide: '🎨 [그림 보고 명령어 만들기]: 11x11 확장 모눈종이에 제시된 큰 밑그림의 모든 선을 완성해 보세요!'
     }
   ],
   debug_guide: [
     // 🌱 입문 5x5 단계
     {
-      title: '🌱 명령어 읽기 문제 1 (5x5)',
+      title: '🌱 그림 그리기 문제 1 (5x5)',
       gridSize: 5,
       starPos: { x: 1, y: 3 },
       targetLines: [
@@ -931,11 +931,11 @@ export const PRESET_LEVELS = {
         { dir: 'DOWN_RIGHT', distance: 2 },
         { dir: 'LEFT', distance: 2 }
       ],
-      guide: '📜 [명령어 따라 그리기]: 준비된 삼각형 코딩 순서를 읽고 붓을 잡아 모눈종이에 직접 그려보세요!'
+      guide: '📜 [명령어 보고 그림 그리기]: 준비된 삼각형 코딩 순서를 읽고 붓을 잡아 모눈종이에 직접 그려 보세요!'
     },
     // 🌿 표준 7x7 단계
     {
-      title: '🌿 명령어 읽기 문제 2 (7x7)',
+      title: '🌿 그림 그리기 문제 2 (7x7)',
       gridSize: 7,
       starPos: { x: 1, y: 5 },
       targetLines: [
@@ -952,11 +952,11 @@ export const PRESET_LEVELS = {
         { dir: 'DOWN', distance: 3 },
         { dir: 'LEFT', distance: 4 }
       ],
-      guide: '📜 [명령어 따라 그리기]: 미리 입력된 명령어를 읽고 붓을 잡고 한 칸 한 칸 맞춰 그려내세요!'
+      guide: '📜 [명령어 보고 그림 그리기]: 미리 입력된 명령어를 읽고 붓을 잡고 한 칸 한 칸 맞춰 그려내세요!'
     },
     // 🔥 도전 9x9 단계
     {
-      title: '🔥 명령어 읽기 문제 3 (9x9)',
+      title: '🔥 그림 그리기 문제 3 (9x9)',
       gridSize: 9,
       starPos: { x: 4, y: 1 },
       targetLines: [
@@ -971,10 +971,10 @@ export const PRESET_LEVELS = {
         { dir: 'UP_LEFT', distance: 3 },
         { dir: 'UP_RIGHT', distance: 3 }
       ],
-      guide: '📜 [명령어 따라 그리기]: 9x9 대형 모눈종이 코딩 순서를 정확하게 읽고 드래그하여 그려내세요!'
+      guide: '📜 [명령어 보고 그림 그리기]: 9x9 대형 모눈종이 코딩 순서를 정확하게 읽고 드래그하여 그려내세요!'
     },
     {
-      title: '🚀 확장 명령어 읽기 문제 4 (11x11)',
+      title: '🚀 확장 그림 그리기 문제 4 (11x11)',
       gridSize: 11,
       starPos: { x: 2, y: 8 },
       targetLines: [
@@ -991,7 +991,7 @@ export const PRESET_LEVELS = {
         { dir: 'DOWN', distance: 4 },
         { dir: 'LEFT', distance: 6 }
       ],
-      guide: '📜 [명령어 따라 그리기]: 11x11 확장 모눈종이의 긴 명령을 한 칸씩 정확히 읽고 그림을 완성하세요!'
+      guide: '📜 [명령어 보고 그림 그리기]: 11x11 확장 모눈종이의 긴 명령을 한 칸씩 정확히 읽고 그림을 완성하세요!'
     }
   ],
   chase: [
@@ -1114,10 +1114,10 @@ export function getNextProblemButtonLabel(mode, challengeType = 'stage') {
     efficiency: '효율 명령 문제',
     shortest: '미사일 문제',
     routing: '장애물 문제',
-    debug: '그림 문제',
-    debug_guide: '명령 읽기 문제',
+    debug: '명령어 만들기 문제',
+    debug_guide: '그림 그리기 문제',
     single_stroke: '한붓그리기 문제',
-    chase: '추격 문제'
+    chase: '도둑 잡기 문제'
   }[mode] || '문제';
 
   if (challengeType === 'random') return `다음 도전 ${activityLabel} ➡️`;
@@ -2660,8 +2660,8 @@ export class App {
     const intro = document.getElementById('education-curriculum-intro');
     const lessonList = document.getElementById('education-lesson-list');
     if (eyebrow) eyebrow.textContent = learningMode === 'drawing'
-      ? 'DRAWING LEARNING PATH'
-      : 'MISSILE LEARNING PATH';
+      ? '그림 학습 순서'
+      : '미사일 학습 순서';
     if (title) title.textContent = learningMode === 'drawing'
       ? '🎨 그림 개념 교육'
       : '🚀 미사일 개념 교육';
@@ -3827,7 +3827,7 @@ export class App {
       ? this.getActiveEducationLesson()
       : {
           icon: '📜',
-          title: '명령 보고 그림 그리기',
+          title: '명령어 보고 그림 그리기',
           description: '제시 명령을 왼쪽부터 읽고 빈 모눈종이에 직접 그려 보세요.'
         };
     const heading = document.getElementById('drawing-education-task-title');
@@ -3988,7 +3988,7 @@ export class App {
       toggleBtn.setAttribute('aria-pressed', String(this.isGhostTrailActive));
       const label = toggleBtn.querySelector('.ghost-label');
       if (label) {
-        label.textContent = `붓 경로 힌트: ${this.isGhostTrailActive ? 'ON' : 'OFF'}`;
+        label.textContent = `붓 경로 힌트: ${this.isGhostTrailActive ? '켜짐' : '꺼짐'}`;
       }
     }
 
@@ -4042,7 +4042,7 @@ export class App {
     const dirMap = {
       'UP': '↑', 'UP_RIGHT': '↗', 'RIGHT': '→', 'DOWN_RIGHT': '↘',
       'DOWN': '↓', 'DOWN_LEFT': '↙', 'LEFT': '←', 'UP_LEFT': '↖',
-      'PEN_DOWN': '✏️누름', 'PEN_UP': '✋떼기'
+      'PEN_DOWN': '🖌️ 누르기', 'PEN_UP': '✋ 떼기'
     };
     return sig.split('>').map(part => {
       const [dir, dist] = part.split(':');
@@ -4823,7 +4823,7 @@ export class App {
     if (this.studentDrawnLines.length === 0) {
       this.onChallengeFailure();
       Audio.playError();
-      this.setStatus('🎨 붓(🖌️)을 잡아 모눈종이 위를 한 칸씩 드래그하여 그림을 먼저 그려보세요!', 'error');
+      this.setStatus('🎨 붓(🖌️)을 잡아 모눈종이 위를 한 칸씩 드래그하여 그림을 먼저 그려 보세요!', 'error');
       return;
     }
 
@@ -5061,7 +5061,7 @@ export class App {
           gridSize: creatorSize,
           starPos: { x: 1, y: Math.max(1, creatorSize - 2) },
           obstacles: [],
-          guide: '🖌️ 방향 버튼으로 나만의 그림 경로를 만든 후 [🔗 공유하기]를 누르면 친구에게 그림 퀴즈가 전송됩니다!'
+          guide: '🖌️ 방향 버튼으로 나만의 그림 경로를 만든 뒤 [🔗 문제 링크·QR 공유]를 누르면 친구에게 보낼 링크와 QR이 만들어져요!'
         };
         document.getElementById('mode-title-text').textContent = '🖌️ 활동 5: 그림 문제 만들기';
       } else {
@@ -5071,7 +5071,7 @@ export class App {
           starPos: { x: 0, y: creatorSize - 1 },
           goalPos: { x: creatorSize - 1, y: 0 },
           obstacles: [],
-          guide: '🚀 모눈종이에서 시작점·목표점·장애물을 배치한 후 [🔗 공유하기]로 친구에게 미사일 문제를 보내세요!'
+          guide: '🚀 모눈종이에서 시작점·목표점·장애물을 배치한 뒤 [🔗 문제 링크·QR 공유]로 친구에게 미사일 문제를 보내세요!'
         };
         document.getElementById('mode-title-text').textContent = '🚀 활동 5: 미사일 문제 만들기';
       }
@@ -5135,7 +5135,7 @@ export class App {
         shortest: '🎯 활동 1: 미사일 이동',
         routing: '🧭 활동 2: 장애물 피하기',
         debug: '🎨 활동 3: 그림 보고 명령어 만들기',
-        debug_guide: '📜 활동 4: 명령 보고 그림 그리기',
+        debug_guide: '📜 활동 4: 명령어 보고 그림 그리기',
         single_stroke: '🖌️ 한붓그리기',
         creator: '✏️ 활동 5: 나만의 문제 만들기',
         chase: '👮‍♂️ 활동 6: 도둑 잡기'
@@ -5281,7 +5281,7 @@ export class App {
               ['shortest', 'routing'].includes(this.currentMode) &&
               activeMissileRule === 'minimum_commands'
                 ? `🧩 안전하게 목표까지 도착하는 명령을 최소 ${level.minimumCommandCount}개로 만들어 보세요. 이동 칸 수는 정답 기준이 아닙니다.`
-                : (level.guide || '이동 명령어를 조립한 뒤 ▶️ 실행하기 버튼을 누르세요.')
+                : (level.guide || '이동 명령어를 조립한 뒤 [⚙️ 실행하기] 버튼을 누르세요.')
             ),
         'info'
       );
@@ -6381,7 +6381,7 @@ export class App {
         : (!Number.isFinite(minimumCommandCount)
           ? '이 문제의 최소 명령 기준을 준비하는 중입니다. 다른 문제를 선택해 다시 시도해 보세요.'
           : (isSuccess
-            ? `목표 그림을 완성하면서 명령 큐를 최소 ${minimumCommandCount}개로 만들었습니다. 실제 붓 이동은 ${physicalDistance}칸입니다.`
+            ? `목표 그림을 완성하면서 명령을 최소 ${minimumCommandCount}개로 만들었습니다. 실제 붓 이동은 ${physicalDistance}칸입니다.`
             : `그림은 완성했습니다. 현재 명령 ${attemptedCommandCount}개를 목표 ${minimumCommandCount}개까지 줄여 보세요. 붓을 떼고 누르는 명령도 각각 한 개로 셉니다.`));
       badge = `내 명령 ${attemptedCommandCount}개 · 목표 최소 ${minimumCommandCount ?? '?'}개 · 실제 붓 이동 ${physicalDistance}칸`;
     }
@@ -6533,7 +6533,7 @@ export class App {
       title = isSuccess ? '⑤ 최소 명령 성공!' : '⑤ 명령을 더 줄일 수 있어요';
       description = reachedGoal
         ? `현재 ${routeAssessment.commandCount}개 명령입니다. 이 문제는 최소 ${routeAssessment.minimumCommandCount}개로 해결할 수 있습니다. 가장 짧은 길만 고집하면 최소 ${level.minimumCommandsOnShortestRoute}개 명령이 필요합니다.`
-        : '이동 칸 수보다 방향·거리 명령 블록의 수를 줄이면서 목표점에 도착해 보세요.';
+        : '이동 칸 수보다 방향·거리 명령 묶음 수를 줄이면서 목표점에 도착해 보세요.';
       badge = `내 명령 ${routeAssessment.commandCount}개 · 목표 ${routeAssessment.minimumCommandCount}개 · 최단길 기준 ${level.minimumCommandsOnShortestRoute}개`;
     } else if (isPatternEducationLesson(lessonId)) {
       const program = result.programAnalysis;
@@ -6650,12 +6650,12 @@ export class App {
           Audio.playExplosion();
         });
         if (this.executionId !== execId) return;
-        this.setStatus('💥 장애물과 충돌하여 목적지 도착 전 폭발해버렸어요!', 'error');
+        this.setStatus('💥 장애물과 충돌하여 목적지 도착 전 폭발해 버렸어요!', 'error');
         this.showResultModal({
           isSuccess: false,
           icon: '🔴 💥',
           title: '💥 장애물 충돌! 미사일 자폭!',
-          desc: '앗! 목적지에 도착하기도 전에 미사일이 장애물(X)과 부딪혀 콰광! 폭발해버렸어요! 🚀💥<br>장애물을 요리조리 우회하는 새로운 경로를 설계해 보세요.',
+          desc: '앗! 목적지에 도착하기도 전에 미사일이 장애물(X)과 부딪혀 콰광! 폭발해 버렸어요! 🚀💥<br>장애물을 요리조리 우회하는 새로운 경로를 설계해 보세요.',
           badge: `장애물 지점 (${result.finalPos.x + 1}, ${result.finalPos.y + 1}) 충돌`,
           primaryBtnText: '🔄 우회 경로 다시 짜기',
           onPrimary: () => this.resetLevel()
@@ -6704,7 +6704,7 @@ export class App {
 
           Audio.playArtisticChime();
           await this.renderer.triggerRainbowCelebration(this.renderer.starPos.x, this.renderer.starPos.y);
-          this.setStatus('🎨 ✨ 한붓그리로 완벽 성공!', 'success');
+          this.setStatus('🎨 ✨ 한붓그리기로 완벽 성공!', 'success');
           this.showResultModal({
             isSuccess: true,
             icon: '🎨 🖌️ ✨',
@@ -6899,14 +6899,14 @@ export class App {
         if (!multiSolutionResult.accepted) {
           Audio.playError();
           this.setStatus(
-            `🔁 ${multiSolutionResult.previousNumber ? `풀이 ${multiSolutionResult.previousNumber}과` : '전에 찾은 풀이와'} 똑같습니다. 방향 순서가 다른 최단 명령 조합을 만들어 보세요. (${multiSolutionResult.count}/${this.multiSolutionGoalCount})`,
+            `🔁 ${multiSolutionResult.previousNumber ? `${multiSolutionResult.previousNumber}번 풀이와` : '전에 찾은 풀이와'} 똑같습니다. 방향 순서가 다른 최단 명령 조합을 만들어 보세요. (${multiSolutionResult.count}/${this.multiSolutionGoalCount})`,
             'info'
           );
           this.showResultModal({
             isSuccess: false,
             icon: '🔁 🧭',
             title: multiSolutionResult.previousNumber
-              ? `전에 했던 풀이 ${multiSolutionResult.previousNumber}과 똑같아요`
+              ? `전에 했던 ${multiSolutionResult.previousNumber}번 풀이와 똑같아요`
               : '전에 했던 풀이와 똑같아요',
             desc: '명령어를 묶는 방법만 다르게 입력한 것은 같은 풀이입니다.<br>한 칸씩 이동하는 <b>방향 순서</b>가 다른 최단 명령 조합을 다시 만들어 보세요.',
             badge: `찾은 최단 풀이 ${multiSolutionResult.count}개 / 목표 ${this.multiSolutionGoalCount}개`,
@@ -7039,25 +7039,25 @@ export class App {
 
       if (passedGoalIndex >= 0) {
         const extraSteps = (result.pathSteps.length - 1) - passedGoalIndex;
-        this.setStatus(`🎯 앗! 목표지점(🎯)을 멈추지 않고 ${extraSteps}칸 그냥 지나쳐버렸습니다!`, 'error');
+        this.setStatus(`🎯 앗! 목표지점(🎯)을 멈추지 않고 ${extraSteps}칸 그냥 지나쳐 버렸습니다!`, 'error');
 
         this.showResultModal({
           isSuccess: false,
           icon: '🎯 💨 🛑',
-          title: '🎯 앗! 목표지점을 그냥 지나쳐버렸어요!',
-          desc: `이동 중에 목표지점(🎯)을 정확히 지나갔지만, 정지하지 않고 <b>${extraSteps}칸을 더 지나쳐버렸습니다!</b> 🚀💨<br>목표칸에 딱 멈출 수 있도록 명령어의 <b>이동 거리(칸 수)를 알맞게 줄여보세요!</b>`,
+          title: '🎯 앗! 목표지점을 그냥 지나쳐 버렸어요!',
+          desc: `이동 중에 목표지점(🎯)을 정확히 지나갔지만, 정지하지 않고 <b>${extraSteps}칸을 더 지나쳐 버렸습니다!</b> 🚀💨<br>목표 칸에 딱 멈출 수 있도록 명령어의 <b>이동 거리(칸 수)를 알맞게 줄여 보세요!</b>`,
           badge: `목표지점 통과 후 +${extraSteps}칸 지나침`,
           primaryBtnText: '🧩 이동 칸 수 줄이기',
           onPrimary: () => {}
         });
       } else {
-        this.setStatus('💥 미사일이 목적지에 도착하기도 전에 폭발해버렸어요!', 'error');
+        this.setStatus('💥 미사일이 목적지에 도착하기도 전에 폭발해 버렸어요!', 'error');
 
         this.showResultModal({
           isSuccess: false,
           icon: '⛽ 💥',
           title: '💥 목적지 도달 전 미사일 폭발!',
-          desc: '연료가 부족하거나 명령어가 모자라 미사일이 목표점(🎯)에 도달하기 전에 중간에서 폭발해버렸어요! 🚀💥<br>방향 명령어를 조금 더 추가해 보세요.',
+          desc: '연료가 부족하거나 명령어가 모자라 미사일이 목표점(🎯)에 도달하기 전에 중간에서 폭발해 버렸어요! 🚀💥<br>방향 명령어를 조금 더 추가해 보세요.',
           badge: `이동 횟수: ${totalDist}칸 (목적지 미달)`,
           primaryBtnText: '🧩 명령어 더 추가하기',
           onPrimary: () => {}
@@ -7424,7 +7424,7 @@ export class App {
       this.onChallengeFailure();
       Audio.playError();
       const totalThiefTurns = level.thiefCommands ? CommandEngine.expandToStepList(level.thiefCommands).length : 0;
-      this.setStatus('💨 🥷 복면 도둑이 모든 경로를 지나 유유히 탈출해버렸습니다!', 'error');
+      this.setStatus('💨 🥷 복면 도둑이 모든 경로를 지나 유유히 탈출해 버렸습니다!', 'error');
 
       this.showResultModal({
         isSuccess: false,
@@ -7555,7 +7555,7 @@ export class App {
         : (['shortest', 'routing'].includes(this.currentMode) &&
       activeMissileRule === 'minimum_commands'
         ? `🧩 안전하게 목표까지 도착하는 명령을 최소 ${level.minimumCommandCount}개로 만들어 보세요. 이동 칸 수는 정답 기준이 아닙니다.`
-        : (level.guide || '🧹 처음 상태로 돌아왔습니다. 새로운 명령을 내려보세요.')),
+        : (level.guide || '🧹 처음 상태로 돌아왔습니다. 새로운 명령을 내려 보세요.')),
       'info'
     );
   }
@@ -7671,7 +7671,7 @@ export class App {
       const isLocalAddress = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
       environmentNote.hidden = !isLocalAddress;
       environmentNote.textContent = isLocalAddress
-        ? '⚠️ 현재는 이 컴퓨터에서만 열리는 로컬 테스트 링크입니다. 실제 pinky-ne.com에서 만든 링크를 친구에게 보내세요.'
+        ? '⚠️ 현재는 이 컴퓨터에서만 열리는 로컬 테스트 링크입니다. 실제 coding.knolquiz.com에서 만든 링크를 친구에게 보내세요.'
         : '';
     }
 

@@ -105,6 +105,11 @@ test('오류 수정 모드: 등교 예제는 모두 고칠 곳이 있다', () =>
   }
 });
 
+test('등교: TV 보기·게임하기 안내 문장이 자연스럽다', () => {
+  assert.equal(rainy('tv', 'socks', 'shoes', 'bag', 'raincoat').orderIssues[0], 'TV를 보느라 등교 시간에 늦었어요! ⏰');
+  assert.equal(rainy('tv', 'game', 'socks', 'shoes', 'bag', 'raincoat').orderIssues[0], 'TV를 보고 게임을 하느라 등교 시간에 많이 늦었어요! ⏰');
+});
+
 test('등교: 양말→운동화, 가방→비옷 순서면 성공하고 거꾸로면 실패한다', () => {
   assert.equal(rainy('socks', 'shoes', 'bag', 'raincoat').success, true);
   assert.equal(rainy('bag', 'raincoat', 'socks', 'shoes').success, true);

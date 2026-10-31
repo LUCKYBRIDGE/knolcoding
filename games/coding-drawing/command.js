@@ -1110,7 +1110,7 @@ export const CommandEngine = {
     if (!comparison.isExactMatch) {
       failureReason = '목표 그림과 똑같이 완성해야 합니다!';
     } else if (hasPenUpCommand) {
-      failureReason = '한붓그리기는 붓을 떼지 않고(Pen Up 없이) 그려야 합니다!';
+      failureReason = '한붓그리기는 붓을 떼지 않고(붓 떼기 없이) 그려야 합니다!';
     }
 
     return {

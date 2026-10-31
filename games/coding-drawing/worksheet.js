@@ -228,6 +228,30 @@ export const WorksheetGenerator = {
   },
 
   /**
+   * 화면용 안내(드래그, 제출, 실행 버튼 등)는 종이에서 할 수 없으므로
+   * 활동지에는 활동별 종이 안내 문장을 쓴다.
+   */
+  getPaperGuide(problem) {
+    const fillInOrder = '출발점에서 목표까지 가는 명령어를 칸에 차례대로 적으세요.';
+    const obstacleNote = ' 장애물 칸은 지나갈 수 없어요.';
+    const hasObstacles = (problem.obstacles || []).length > 0;
+    switch (problem.modeType) {
+      case 'shortest':
+        return fillInOrder + (hasObstacles ? obstacleNote : '');
+      case 'routing':
+        return fillInOrder + obstacleNote;
+      case 'debug':
+        return "왼쪽 그림을 그리는 명령어를 차례대로 적으세요. 붓 떼기는 '떼기', 붓 누르기는 '누르기'로 적어요.";
+      case 'debug_guide':
+        return '주어진 명령어대로 왼쪽 모눈종이에 선을 그려 보세요.';
+      case 'chase':
+        return '도둑을 잡는 경찰의 명령어를 차례마다 한 칸씩 적으세요.';
+      default:
+        return this.escapeHTML(problem.guide || '목표점에 도착하는 명령어를 칸에 차례대로 적으세요.');
+    }
+  },
+
+  /**
    * 개별 문제 카드 HTML 및 오프스크린 High-DPI 캔버스 PNG 생성
    */
   async createProblemCard(problem, problemNum) {
@@ -269,7 +293,7 @@ export const WorksheetGenerator = {
       shortest: '🎯 미사일 이동',
       routing: '🧭 장애물 피하기',
       debug: '🎨 그림 보고 명령어 만들기',
-      debug_guide: '📜 명령어 따라 그림 그리기',
+      debug_guide: '📜 명령어 보고 그림 그리기',
       chase: '👮‍♂️ 도둑 잡기'
     };
 
@@ -341,7 +365,7 @@ export const WorksheetGenerator = {
           <span class="ws-prob-num">[문제 ${problemNum}]</span>
           <span class="ws-prob-type">${modeBadgeMap[problem.modeType] || '알고리즘 미션'} (${problem.gridSize}x${problem.gridSize})</span>
         </div>
-        <p class="ws-guide">${problem.guide || '목적지에 도달하는 코드를 완성하세요!'}</p>
+        <p class="ws-guide">${this.getPaperGuide(problem)}</p>
         ${stepTextHTML}
         ${answerAreaHTML}
 
@@ -429,8 +453,8 @@ export const WorksheetGenerator = {
     const modeNames = {
       shortest: '🎯 미사일 이동',
       routing: '🧭 장애물 피하기',
-      debug: '🎨 그림 보고 만들기',
-      debug_guide: '📜 명령어 따라 그림 그리기',
+      debug: '🎨 그림 보고 명령어 만들기',
+      debug_guide: '📜 명령어 보고 그림 그리기',
       chase: '👮‍♂️ 도둑 잡기'
     };
 

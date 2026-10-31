@@ -3,10 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>알고리즘 놀이터</title>
+    <title>알고리즘 놀이터 · 놀코딩</title>
+    <meta name="description" content="라면 끓이기, 비 오는 날 등교하기처럼 익숙한 일을 블록 순서로 맞추며 알고리즘을 익히는 활동입니다." />
+    <link rel="icon" type="image/svg+xml" href="../assets/knolcoding-mark.svg" />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       body {
+        font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
       }
@@ -15,51 +18,53 @@
         image-rendering: pixelated;
       }
 
-      .pinky-algorithm-home-link {
+      /* 결과 창(z-index 50)보다 아래에 두어 창을 가리지 않게 한다. */
+      .knolcoding-home-link {
         position: fixed;
         top: 14px;
         right: 14px;
-        z-index: 60;
-        min-height: 38px;
+        z-index: 40;
+        min-height: 40px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         padding: 0 14px;
-        border: 1px solid rgba(216, 222, 232, 0.95);
-        border-radius: 10px;
-        color: #172033;
+        border: 1px solid #d3e7da;
+        border-radius: 999px;
+        color: #1b2620;
         background: rgba(255, 255, 255, 0.94);
-        box-shadow: 0 12px 28px rgba(23, 32, 51, 0.14);
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
         font-size: 14px;
-        font-weight: 900;
-        line-height: 1;
+        font-weight: 800;
         text-decoration: none;
-        backdrop-filter: blur(10px);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
       }
 
-      .pinky-algorithm-home-link:hover {
-        border-color: rgba(211, 22, 95, 0.34);
-        color: #d3165f;
+      .knolcoding-home-link:hover {
+        border-color: #23774a;
+        color: #23774a;
+      }
+
+      .knolcoding-home-link:focus-visible {
+        outline: 3px solid #23774a;
+        outline-offset: 2px;
       }
 
       @media (max-width: 640px) {
-        .pinky-algorithm-home-link {
+        .knolcoding-home-link {
           top: 10px;
           right: 10px;
-          min-height: 34px;
           padding: 0 11px;
           font-size: 13px;
         }
       }
     </style>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/htm@3.1.1/dist/htm.umd.js"></script>
   </head>
   <body>
-    <a class="pinky-algorithm-home-link" href="../" aria-label="knol 홈으로 이동">knol 홈</a>
+    <a class="knolcoding-home-link" href="../" aria-label="놀코딩 홈으로 이동">놀코딩 홈</a>
     <div id="root"></div>
-    <script src="./app.js?v=20260604-ramen-summary-order-only"></script>
+    <script src="./app.js?v=20261031"></script>
   </body>
 </html>

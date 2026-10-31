@@ -1,5 +1,5 @@
 /* global React, ReactDOM, htm */
-const { useState, useEffect, useCallback, Fragment } = React;
+const { useState, useEffect, useCallback, useMemo, Fragment } = React;
 const html = htm.bind(React.createElement);
 
 // ==================== 공통 유틸리티 ====================
@@ -20,7 +20,7 @@ const Icon = ({ path, extra }) =>
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d=${path} />
   </svg>`;
 
-function Block({ block, onDragStart, isGhost = false, index, totalBlocks, onQuickAction, quickActionLabel, iconPath, onTimeChange }) {
+function Block({ block, onDragStart, isGhost = false, index, totalBlocks, onQuickAction, quickActionLabel, quickActionAria, onTap, tapLabel, onMoveUp, onMoveDown, iconPath, onTimeChange }) {
   const stackPath = 'M 0 0 H 80 V 5 H 100 V 0 H 200 V 45 H 100 V 50 H 80 V 45 H 0 Z';
   const colorMap = {
     'bg-cyan-500': 'fill-cyan-500',
@@ -43,57 +43,58 @@ function Block({ block, onDragStart, isGhost = false, index, totalBlocks, onQuic
     zIndex: typeof index === 'number' && typeof totalBlocks === 'number' ? totalBlocks - index : undefined,
   };
 
-  const handleQuickAction = (e) => {
-    if (!onQuickAction) return;
+  // 블록 안의 작은 버튼은 블록 전체 탭(추가)과 겹치지 않게 이벤트를 막는다.
+  const runOnly = (action) => (e) => {
     e.preventDefault();
     e.stopPropagation();
-    onQuickAction();
+    action();
   };
 
-  const handleTimeClick = (e) => {
-    if (!onTimeChange) return;
+  // 터치 화면에서는 드래그가 잘 되지 않으므로 블록을 한 번 누르면 바로 추가한다.
+  const handleKeyDown = (e) => {
+    if (!onTap || (e.key !== 'Enter' && e.key !== ' ')) return;
     e.preventDefault();
-    e.stopPropagation();
-    onTimeChange();
+    onTap();
   };
+
+  const controlClass = 'h-9 min-w-[36px] px-2 rounded-lg shadow-sm font-bold text-sm bg-white/90 text-gray-800 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white';
+  const controlCount = [onTimeChange, onMoveUp, onMoveDown, onQuickAction].filter(Boolean).length;
 
   return html`
     <div
-      id=${block.id}
       draggable="true"
       onDragStart=${onDragStart}
-      onDoubleClick=${onQuickAction ? handleQuickAction : undefined}
-      className=${`relative h-[50px] ${typeof index === 'number' ? '-mt-[5px]' : 'my-1'} cursor-grab active:cursor-grabbing font-bold transition-all duration-200 transform hover:scale-105 ${isGhost ? 'opacity-50' : ''}`}
+      onClick=${onTap || undefined}
+      onKeyDown=${onTap ? handleKeyDown : undefined}
+      role=${onTap ? 'button' : undefined}
+      tabIndex=${onTap ? 0 : undefined}
+      aria-label=${onTap ? `${block.text} ${tapLabel || '추가'}` : undefined}
+      className=${`relative h-[50px] ${typeof index === 'number' ? '-mt-[5px]' : 'my-1'} ${onTap ? 'cursor-pointer' : 'cursor-grab'} active:cursor-grabbing font-bold transition-all duration-200 transform hover:scale-[1.02] focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-400 rounded ${isGhost ? 'opacity-50' : ''}`}
       style=${style}
     >
-      <svg viewBox="0 0 200 50" className="absolute w-full h-full" preserveAspectRatio="none">
+      <svg viewBox="0 0 200 50" className="absolute w-full h-full" preserveAspectRatio="none" aria-hidden="true">
         <path d=${stackPath} className=${colorMap[block.color]} />
       </svg>
-      <div className="absolute inset-0 flex items-center pl-6 ${onQuickAction ? 'pr-12' : 'pr-4'} text-white gap-2">
-        ${iconPath ? html`<${Icon} path=${iconPath} extra="h-6 w-6" />` : null}
+      <div className="absolute inset-0 flex items-center pl-4 sm:pl-6 text-white gap-2" style=${{ paddingRight: `${controlCount * 40 + 8}px` }}>
+        ${iconPath ? html`<${Icon} path=${iconPath} extra="h-6 w-6 flex-shrink-0" />` : null}
         <span className="flex-1 truncate">${block.text}</span>
       </div>
-      ${onTimeChange
+      ${controlCount > 0
         ? html`
-            <button
-              type="button"
-              className="absolute right-${onQuickAction ? '10' : '2'} top-1/2 -translate-y-1/2 bg-white/90 text-pink-600 text-xs font-bold px-1.5 py-0.5 rounded shadow-sm hover:bg-white border border-pink-300"
-              onClick=${handleTimeClick}
-              title="클릭하여 시간 선택"
-            >
-              ⏱️
-            </button>
-          `
-        : null}
-      ${onQuickAction
-        ? html`
-            <button
-              type="button"
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/70 text-gray-800 text-xs font-semibold px-2 py-0.5 rounded-full shadow-sm hover:bg-white"
-              onClick=${handleQuickAction}
-            >
-              ${quickActionLabel}
-            </button>
+            <div className="absolute right-1.5 top-0 h-[45px] flex items-center gap-1">
+              ${onTimeChange
+                ? html`<button type="button" className=${`${controlClass} text-pink-600`} onClick=${runOnly(onTimeChange)} title="기다리는 시간 바꾸기" aria-label=${`${block.text}: 기다리는 시간 바꾸기`}>⏱️</button>`
+                : null}
+              ${onMoveUp
+                ? html`<button type="button" className=${controlClass} onClick=${runOnly(onMoveUp)} title="위로 올리기" aria-label=${`${block.text} 위로 올리기`}>▲</button>`
+                : null}
+              ${onMoveDown
+                ? html`<button type="button" className=${controlClass} onClick=${runOnly(onMoveDown)} title="아래로 내리기" aria-label=${`${block.text} 아래로 내리기`}>▼</button>`
+                : null}
+              ${onQuickAction
+                ? html`<button type="button" className=${controlClass} onClick=${runOnly(onQuickAction)} title=${quickActionAria || ''} aria-label=${`${block.text} ${quickActionAria || ''}`}>${quickActionLabel}</button>`
+                : null}
+            </div>
           `
         : null}
     </div>
@@ -110,7 +111,7 @@ function BlockPalette({ blocks, onDragStart, onDrop, onQuickAdd, iconPaths, onTi
     >
       <div className="flex items-center justify-between border-b-2 pb-2 mb-2 flex-shrink-0">
         <h2 className="text-2xl font-bold text-gray-800">블록 꾸러미</h2>
-        <span className="text-xs text-gray-500">더블클릭 또는 버튼으로 추가</span>
+        <span className="text-xs text-gray-500">누르거나 끌어서 추가</span>
       </div>
       <div className="flex-grow overflow-y-auto p-2">
         ${blocks.length
@@ -119,8 +120,11 @@ function BlockPalette({ blocks, onDragStart, onDrop, onQuickAdd, iconPaths, onTi
                 key=${block.id + '-' + idx}
                 block=${block}
                 onDragStart=${(e) => onDragStart(e, block.id, idx)}
+                onTap=${() => onQuickAdd(block.id, idx)}
+                tapLabel="블록을 내 절차에 추가"
                 onQuickAction=${() => onQuickAdd(block.id, idx)}
                 quickActionLabel="＋"
+                quickActionAria="추가"
                 iconPath=${iconPaths ? iconPaths[block.id] : null}
                 onTimeChange=${block.id === 'waitBoil' && onTimeChange ? () => onTimeChange(idx) : null}
               />`,
@@ -133,7 +137,7 @@ function BlockPalette({ blocks, onDragStart, onDrop, onQuickAdd, iconPaths, onTi
   `;
 }
 
-function ExecutionSequence({ blocks, onDragStart, onDrop, onExecute, onReset, onQuickRemove, iconPaths, onTimeChange, executeLabel = "실행하기! 🚀", showStartBlock = false, startBlockText = "등교하기 버튼을 눌렀을 때", startBlockColor = "green" }) {
+function ExecutionSequence({ blocks, onDragStart, onDrop, onExecute, onReset, onQuickRemove, onMove, iconPaths, onTimeChange, executeLabel = "실행하기! 🚀", showStartBlock = false, startBlockText = "등교하기 버튼을 눌렀을 때", startBlockColor = "green" }) {
   const [dragOverIndex, setDragOverIndex] = useState(null);
 
   const handleDragOver = (e) => {
@@ -241,7 +245,7 @@ function ExecutionSequence({ blocks, onDragStart, onDrop, onExecute, onReset, on
         </div>
         ${showStartBlock
           ? html`<p className="text-sm text-gray-500 mt-2">
-              블록 꾸러미에서 원하는 블록을 <strong className="text-gray-700">드래그 & 드롭</strong>해 점선 영역에 연결해 보세요.
+              블록 꾸러미에서 원하는 블록을 <strong className="text-gray-700">누르거나 끌어서</strong> 점선 영역에 연결해 보세요.
             </p>`
           : null}
       </div>
@@ -262,7 +266,7 @@ function ExecutionSequence({ blocks, onDragStart, onDrop, onExecute, onReset, on
         ${blocks.length === 0 && !showStartBlock
           ? html`
               <div className="flex items-center justify-center h-full text-gray-400">
-                <p>블록을 여기로 드래그하세요</p>
+                <p>블록을 누르거나 여기로 끌어 오세요</p>
               </div>
             `
           : blocks.map((block, idx) =>
@@ -276,7 +280,10 @@ function ExecutionSequence({ blocks, onDragStart, onDrop, onExecute, onReset, on
                       totalBlocks=${blocks.length}
                       onDragStart=${(e) => onDragStart(e, block.id, idx)}
                       onQuickAction=${() => onQuickRemove(idx)}
-                      quickActionLabel="↩"
+                      quickActionLabel="✕"
+                      quickActionAria="빼기"
+                      onMoveUp=${onMove && idx > 0 ? () => onMove(idx, -1) : null}
+                      onMoveDown=${onMove && idx < blocks.length - 1 ? () => onMove(idx, 1) : null}
                       iconPath=${iconPaths ? iconPaths[block.id] : null}
                       onTimeChange=${block.id === 'waitBoil' && onTimeChange ? () => onTimeChange(idx) : null}
                     />
@@ -289,6 +296,9 @@ function ExecutionSequence({ blocks, onDragStart, onDrop, onExecute, onReset, on
                     onDragStart=${(e) => onDragStart(e, block.id, idx)}
                     onQuickAction=${() => onQuickRemove(idx)}
                     quickActionLabel="✕"
+                    quickActionAria="빼기"
+                    onMoveUp=${onMove && idx > 0 ? () => onMove(idx, -1) : null}
+                    onMoveDown=${onMove && idx < blocks.length - 1 ? () => onMove(idx, 1) : null}
                     iconPath=${iconPaths ? iconPaths[block.id] : null}
                     onTimeChange=${block.id === 'waitBoil' && onTimeChange ? () => onTimeChange(idx) : null}
                   />`
@@ -296,7 +306,7 @@ function ExecutionSequence({ blocks, onDragStart, onDrop, onExecute, onReset, on
         ${dragOverIndex === blocks.length && showStartBlock ? html`<${DropIndicator} key=${'drop-end'} />` : null}
         ${blocks.length === 0 && dragOverIndex === null && showStartBlock
           ? html`<div className="flex items-center justify-center h-full text-gray-400 text-center">
-              <p className="p-4">왼쪽 꾸러미에서<br />블록을 가져와<br />여기에 연결하세요!</p>
+              <p className="p-4">블록 꾸러미에서<br />블록을 누르거나 끌어 와서<br />여기에 연결하세요!</p>
             </div>`
           : null}
         ${dragOverIndex !== null && !showStartBlock
@@ -330,11 +340,11 @@ function ExecutionSequence({ blocks, onDragStart, onDrop, onExecute, onReset, on
 
 const RAMEN_BLOCKS = {
   water: { id: 'water', text: '냄비에 물 받기', color: 'bg-blue-500' },
-  fire: { id: 'fire', text: '냄비에 불켜기', color: 'bg-red-500' },
+  fire: { id: 'fire', text: '냄비에 불 켜기', color: 'bg-red-500' },
   waitBoil: { id: 'waitBoil', text: '30초 기다리기', color: 'bg-pink-500', seconds: 30 },
   noodle: { id: 'noodle', text: '면 넣기', color: 'bg-orange-500' },
   soup: { id: 'soup', text: '스프 넣기', color: 'bg-green-500' },
-  fireOff: { id: 'fireOff', text: '불끄기', color: 'bg-gray-500' },
+  fireOff: { id: 'fireOff', text: '불 끄기', color: 'bg-gray-500' },
 };
 
 const RAMEN_BOIL_SECONDS = 30;
@@ -674,7 +684,7 @@ const getRamenCookQuality = (cookedSeconds) => {
     return {
       success: false,
       message: '🍜 살짝 덜 익은 라면이에요!',
-      description: `면을 ${cookedSeconds}초 끓였어요. 먹기엔 이르고 아직 덜 익은 부분이 있어요!`,
+      description: `면을 ${cookedSeconds}초 끓였어요. 아직 덜 익은 부분이 있어요!`,
       emoji: '😐',
       resultType: 'slightly_undercooked',
       cookedTime: cookedSeconds,
@@ -812,7 +822,7 @@ const evaluateRamen = (sequence) => {
         return {
           success: false,
           message: '🔥 탄 면과 탄 스프 맛 라면이에요!',
-          description: '물을 넣기 전에 면과 스프가 뜨거운 냄비에서 타버렸어요. 나중에 물을 넣어도 탄맛이 남아요!',
+          description: '물을 넣기 전에 면과 스프가 뜨거운 냄비에서 타버렸어요. 나중에 물을 넣어도 탄 맛이 남아요!',
           emoji: '💥',
           resultType: 'burnt_noodle_soup_taste_ramen'
         };
@@ -821,8 +831,8 @@ const evaluateRamen = (sequence) => {
       if (stats.drySoupBurned) {
         return {
           success: false,
-          message: '🔥 스프가 타서 탄맛 라면이에요!',
-          description: '스프가 먼저 뜨거운 냄비에서 타버렸어요. 면은 나중에 넣어도 국물에 탄맛이 나요!',
+          message: '🔥 스프가 타서 탄 맛 라면이에요!',
+          description: '스프가 먼저 뜨거운 냄비에서 타버렸어요. 면은 나중에 넣어도 국물에 탄 맛이 나요!',
           emoji: '💥',
           resultType: 'burnt_soup_taste_ramen'
         };
@@ -831,8 +841,8 @@ const evaluateRamen = (sequence) => {
       if (stats.dryNoodleBurned) {
         return {
           success: false,
-          message: '🔥 면이 타서 탄맛 라면이에요!',
-          description: '면이 물 없이 뜨거운 냄비에서 타버렸어요. 나중에 물과 스프를 넣어도 탄맛이 남아요!',
+          message: '🔥 면이 타서 탄 맛 라면이에요!',
+          description: '면이 물 없이 뜨거운 냄비에서 타버렸어요. 나중에 물과 스프를 넣어도 탄 맛이 남아요!',
           emoji: '💥',
           resultType: 'burnt_noodle_taste_ramen'
         };
@@ -840,7 +850,7 @@ const evaluateRamen = (sequence) => {
 
       return {
         success: false,
-        message: '🔥 냄비가 타서 탄맛 라면이에요!',
+        message: '🔥 냄비가 타서 탄 맛 라면이에요!',
         description: '물을 넣기 전에 빈 냄비를 먼저 달궜어요. 나중에 재료를 넣어도 탄 냄비 맛이 남아요!',
         emoji: '💥',
         resultType: 'burnt_taste_ramen'
@@ -1043,7 +1053,7 @@ const evaluateRamen = (sequence) => {
     if (stats.waterReduced) {
       return {
         success: false,
-        message: '😵 맹물 면이 너무 졸았어요!',
+        message: '😵 스프 없이 물이 많이 졸았어요!',
         description: '불을 켠 채 5분 넘게 끓여서 물이 많이 줄었어요. 스프도 없어서 맛있는 라면이 되지 않았어요!',
         emoji: '😵',
         resultType: 'reduced_noodle_water'
@@ -1152,7 +1162,7 @@ const evaluateRamen = (sequence) => {
     return {
       success: false,
       message: '🔥 불을 안 껐어요!',
-      description: '라면은 먹을 수 있게 익었지만 마지막에 불을 끄지 않았어요. 안전을 위해 불끄기 블록이 필요해요!',
+      description: '라면은 먹을 수 있게 익었지만 마지막에 불을 끄지 않았어요. 안전을 위해 불 끄기 블록이 필요해요!',
       emoji: '⚠️',
       resultType: 'fire_not_off'
     };
@@ -1198,7 +1208,7 @@ const getRamenBlockSummaryText = (block) => {
     fire: '불',
     noodle: '면',
     soup: '스프',
-    fireOff: '불끄기',
+    fireOff: '불 끄기',
   };
   return textMap[block.id] || RAMEN_BLOCKS[block.id]?.text || block.text || block.id;
 };
@@ -1408,7 +1418,7 @@ function RamenResultModal({ isOpen, onClose, result, animationFrames, isDebugMod
           onClick=${onClose}
           className=${`w-full ${result.success ? 'bg-green-600 hover:bg-green-700' : 'bg-orange-600 hover:bg-orange-700'} text-white px-6 py-3 rounded-lg font-bold text-lg shadow-lg hover:shadow-xl transition-all`}
         >
-          ${isDebugMode && !result.success ? '🔧 코드 수정하기' : '다시 도전하기'}
+          ${result.success ? '닫기' : '🔧 내 절차 고치기'}
         </button>
       </div>
     </div>
@@ -1487,7 +1497,7 @@ function RamenIntroScreen({ onStartGame, onBack }) {
             onClick=${() => onStartGame('debug')}
             className="bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xl sm:text-2xl font-bold px-8 sm:px-10 py-4 sm:py-5 rounded-2xl shadow-2xl hover:shadow-3xl transform hover:scale-105 transition-all duration-300 border-4 border-purple-300"
           >
-            🔧 오류수정 모드
+            🔧 오류 수정 모드
           </button>
         </div>
       </div>
@@ -1684,6 +1694,17 @@ function RamenGame({ onBack }) {
     setPalette((prev) => [...prev, { ...block }]);
   };
 
+  // 드래그 없이도 순서를 바꿀 수 있게 한 칸씩 위아래로 옮긴다.
+  const handleMoveBlock = (index, delta) => {
+    setSequence((prev) => {
+      const target = index + delta;
+      if (target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  };
+
   // 시간 변경 핸들러 (팔레트에 있는 블록) - 모달 열기
   const handlePaletteTimeChange = (blockIndex) => {
     const block = palette[blockIndex];
@@ -1781,13 +1802,9 @@ function RamenGame({ onBack }) {
   };
 
   const handleResultModalClose = () => {
-    if (gameMode === 'debug') {
-      // 오류수정 모드: 모달만 닫고 블록 유지
-      setResult(null);
-    } else {
-      // 일반 모드: 완전 초기화
-      handleReset();
-    }
+    // 결과를 본 뒤 바로 고쳐 볼 수 있게 두 모드 모두 블록을 남긴다.
+    // 처음부터 하려면 '초기화' 버튼을 누른다.
+    setResult(null);
   };
 
   const handleStartGame = (mode) => {
@@ -1815,7 +1832,7 @@ function RamenGame({ onBack }) {
 
         // 조립된 블록을 보여주고 나서 결과 실행
         setTimeout(() => {
-          // 오류수정 모드: 즉시 결과 실행해서 보여주기
+          // 오류 수정 모드: 즉시 결과 실행해서 보여주기
           const frames = (() => {
             const cookingIds = ['water', 'fire', 'waitBoil', 'noodle', 'soup', 'fireOff'];
             const snapshots = [[]];
@@ -1851,7 +1868,7 @@ function RamenGame({ onBack }) {
           >
             ← 메뉴로 돌아가기
           </button>
-          <h1 className="text-4xl font-bold text-center text-orange-800">🍜 라면 끓이기 마스터!</h1>
+          <h1 className="text-2xl sm:text-4xl font-bold text-center text-orange-800">🍜 라면 끓이기 마스터!</h1>
           <div className="w-32"></div>
         </div>
 
@@ -1873,6 +1890,7 @@ function RamenGame({ onBack }) {
               onExecute=${handleExecute}
               onReset=${handleReset}
               onQuickRemove=${handleQuickRemove}
+              onMove=${handleMoveBlock}
               onTimeChange=${handleSequenceTimeChange}
               executeLabel="라면 끓이기! 🍜"
               showStartBlock=${true}
@@ -1904,7 +1922,7 @@ function RamenGame({ onBack }) {
   `;
 }
 
-// ==================== 비오는날 등교 게임 ====================
+// ==================== 비 오는 날 등교 게임 ====================
 
 const RAINY_DAY_BLOCKS = {
   socks: { id: 'socks', text: '양말 신기', color: 'bg-cyan-500', isDistraction: false },
@@ -2050,12 +2068,12 @@ const evaluateRainyDay = (sequence) => {
   // 시간 낭비 체크 (TV 시청, 게임하기)
   const distractionBlocks = sequence.filter(b => b.isDistraction);
   if (distractionBlocks.length > 0) {
-    const distractionNames = distractionBlocks.map(b => b.text).join(', ');
-    if (distractionBlocks.length === 1) {
-      orderIssues.push(`${distractionNames}를 해서 등교 시간에 늦었어요! ⏰`);
-    } else {
-      orderIssues.push(`${distractionNames}를 해서 등교 시간에 많이 늦었어요! ⏰`);
-    }
+    const stems = { tv: 'TV를 보', game: '게임을 하' };
+    const actions = distractionBlocks.map(b => stems[b.id] || `${b.text}를 하`);
+    const reason = actions.length === 1
+      ? `${actions[0]}느라`
+      : `${actions.slice(0, -1).join('고 ')}고 ${actions[actions.length - 1]}느라`;
+    orderIssues.push(`${reason} 등교 시간에 ${actions.length === 1 ? '' : '많이 '}늦었어요! ⏰`);
   }
 
   if (has('shoes') && has('socks') && shoesIndex < socksIndex) {
@@ -2187,7 +2205,7 @@ function RainyDayResultModal({ isOpen, onClose, result, frameImages, isDebugMode
           onClick=${onClose}
           className="mt-8 w-full bg-blue-500 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-blue-600 transition-colors"
         >
-          ${isDebugMode && result.status === 'failure' ? '🔧 코드 수정하기' : '다시 해보기'}
+          ${result.status === 'success' ? '닫기' : '🔧 내 절차 고치기'}
         </button>
       </div>
       <style>${`
@@ -2202,7 +2220,8 @@ function RainyDayResultModal({ isOpen, onClose, result, frameImages, isDebugMode
 }
 
 function IntroScreen({ onStartGame, onBack, character, onCharacterChange }) {
-  const raindrops = Array.from({ length: 50 }).map((_, i) => {
+  // 캐릭터를 바꿔 다시 그릴 때 빗방울 위치가 튀지 않도록 처음 한 번만 정한다.
+  const raindrops = useMemo(() => Array.from({ length: 50 }).map((_, i) => {
     const style = {
       left: `${Math.random() * 100}%`,
       top: '-10%',
@@ -2212,7 +2231,7 @@ function IntroScreen({ onStartGame, onBack, character, onCharacterChange }) {
       animationDuration: `${Math.random() * 1 + 0.5}s`,
     };
     return html`<div key=${i} className="absolute bg-blue-300 rounded-full animate-fall" style=${style}></div>`;
-  });
+  }), []);
 
   return html`
     <div className="relative min-h-screen bg-sky-800 text-white flex flex-col items-center justify-center overflow-hidden p-4">
@@ -2229,7 +2248,7 @@ function IntroScreen({ onStartGame, onBack, character, onCharacterChange }) {
 
       ${raindrops}
       <div className="relative z-10 text-center bg-black/30 backdrop-blur-sm p-8 md:p-12 rounded-2xl shadow-lg border border-sky-400 max-w-2xl">
-        <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 animate-fade-in-down">비오는날 등교 성공하기!</h1>
+        <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 animate-fade-in-down">비 오는 날 등교 성공하기!</h1>
         <p className="text-base sm:text-lg md:text-2xl mb-6 sm:mb-8 animate-fade-in-up">
           창밖에 비가 와요! ☔<br />
           젖지 않고 학교에 갈 준비를 해볼까요?
@@ -2267,7 +2286,7 @@ function IntroScreen({ onStartGame, onBack, character, onCharacterChange }) {
             onClick=${() => onStartGame('debug')}
             className="bg-purple-500 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-full text-lg sm:text-xl shadow-lg hover:bg-purple-600 transition-all transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-400"
           >
-            🔧 오류수정 모드
+            🔧 오류 수정 모드
           </button>
         </div>
       </div>
@@ -2447,6 +2466,17 @@ function RainyDayGame({ onBack }) {
     setPalette((prev) => [...prev, { ...block }]);
   };
 
+  // 드래그 없이도 순서를 바꿀 수 있게 한 칸씩 위아래로 옮긴다.
+  const handleMoveBlock = (index, delta) => {
+    setSequence((prev) => {
+      const target = index + delta;
+      if (target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  };
+
   const handleExecute = () => {
     const frames = (() => {
       const attireIds = ['socks', 'shoes', 'bag', 'raincoat'];
@@ -2470,7 +2500,7 @@ function RainyDayGame({ onBack }) {
     if (problems.length > 0) {
       setResult({ status: 'failure', title: '등교 실패! 😥', messages: problems });
     } else {
-      setResult({ status: 'success', title: '등교 성공! 🥳', messages: ['발도, 가방도 젖지 않았어요! 완벽한 절차입니다!'] });
+      setResult({ status: 'success', title: '등교 성공! 🥳', messages: ['발도, 가방도 젖지 않았어요! 완벽한 절차예요!'] });
     }
 
     setIsModalOpen(true);
@@ -2488,14 +2518,10 @@ function RainyDayGame({ onBack }) {
   };
 
   const handleResultModalClose = () => {
-    if (gameMode === 'debug') {
-      // 오류수정 모드: 모달만 닫고 블록 유지
-      setResult(null);
-      setIsModalOpen(false);
-    } else {
-      // 일반 모드: 완전 초기화
-      handleReset();
-    }
+    // 결과를 본 뒤 바로 고쳐 볼 수 있게 두 모드 모두 블록을 남긴다.
+    // 처음부터 하려면 '처음부터' 버튼을 누른다.
+    setResult(null);
+    setIsModalOpen(false);
   };
 
   const handleStartGame = (mode) => {
@@ -2523,7 +2549,7 @@ function RainyDayGame({ onBack }) {
 
         // 조립된 블록을 보여주고 나서 결과 실행
         setTimeout(() => {
-          // 오류수정 모드: 즉시 결과 실행해서 보여주기
+          // 오류 수정 모드: 즉시 결과 실행해서 보여주기
           const frames = (() => {
             const attireIds = ['socks', 'shoes', 'bag', 'raincoat'];
             const snapshots = [[]];
@@ -2545,7 +2571,7 @@ function RainyDayGame({ onBack }) {
           if (problems.length > 0) {
             setResult({ status: 'failure', title: '등교 실패! 😥', messages: problems });
           } else {
-            setResult({ status: 'success', title: '등교 성공! 🥳', messages: ['발도, 가방도 젖지 않았어요! 완벽한 절차입니다!'] });
+            setResult({ status: 'success', title: '등교 성공! 🥳', messages: ['발도, 가방도 젖지 않았어요! 완벽한 절차예요!'] });
           }
           setIsModalOpen(true);
         }, 500);
@@ -2567,7 +2593,7 @@ function RainyDayGame({ onBack }) {
           >
             ← 메뉴로 돌아가기
           </button>
-          <h1 className="text-4xl font-bold text-center text-blue-800">🌧️ 비오는날 등교 성공하기!</h1>
+          <h1 className="text-2xl sm:text-4xl font-bold text-center text-blue-800">🌧️ 비 오는 날 등교 성공하기!</h1>
           <div className="w-32"></div>
         </div>
 
@@ -2589,6 +2615,7 @@ function RainyDayGame({ onBack }) {
               onExecute=${handleExecute}
               onReset=${handleReset}
               onQuickRemove=${handleQuickRemove}
+              onMove=${handleMoveBlock}
               iconPaths=${RAINY_DAY_ICON_PATHS}
               executeLabel="등교하기! 🎒"
               showStartBlock=${true}
@@ -2690,7 +2717,7 @@ function ManualModal({ isOpen, onClose }) {
               </li>
               <li className="flex items-start">
                 <span className="text-purple-500 mr-2">✓</span>
-                <span className="text-sm sm:text-base"><strong>절차적 사고 학습:</strong> 순차, 조건, 반복 등 프로그래밍의 기본 개념을 익힐 수 있어요</span>
+                <span className="text-sm sm:text-base"><strong>절차적 사고 학습:</strong> 일을 차례대로 나누는 ‘순차’를 익히고, 순서가 바뀌면 결과가 어떻게 달라지는지 알아봐요</span>
               </li>
               <li className="flex items-start">
                 <span className="text-purple-500 mr-2">✓</span>
@@ -2710,19 +2737,19 @@ function ManualModal({ isOpen, onClose }) {
                 <p className="font-bold text-green-700 mb-1">📝 일반 모드</p>
                 <ol className="space-y-1 ml-4 list-decimal text-sm sm:text-base">
                   <li>왼쪽 <strong>블록 꾸러미</strong>에서 필요한 블록을 선택하세요</li>
-                  <li>드래그 앤 드롭 또는 더블클릭으로 <strong>실행 순서</strong>에 추가하세요</li>
-                  <li>블록을 올바른 순서로 배열한 후 <strong>실행 버튼</strong>을 눌러보세요</li>
-                  <li>결과를 보고 무엇이 잘못되었는지 생각해보세요</li>
+                  <li>블록을 누르거나 끌어서 <strong>내 절차</strong>에 추가하세요. ▲▼ 버튼으로 순서를 바꾸고 ✕ 버튼으로 뺄 수 있어요</li>
+                  <li>블록을 올바른 순서로 놓은 뒤 <strong>실행 버튼</strong>을 눌러 보세요</li>
+                  <li>결과를 보고 무엇이 잘못되었는지 생각해 보세요. 결과 창을 닫아도 블록은 그대로 남아요</li>
                   <li>성공할 때까지 순서를 바꿔가며 도전하세요!</li>
                 </ol>
               </div>
               <div className="bg-white rounded-lg p-3 border border-orange-200">
-                <p className="font-bold text-orange-700 mb-1">🔧 오류수정 모드</p>
+                <p className="font-bold text-orange-700 mb-1">🔧 오류 수정 모드</p>
                 <ol className="space-y-1 ml-4 list-decimal text-sm sm:text-base">
                   <li>이미 잘못된 코드가 준비되어 있어요</li>
                   <li>먼저 <strong>실패한 결과</strong>를 확인하고 무엇이 문제인지 생각해보세요</li>
-                  <li><strong>🔧 코드 수정하기</strong> 버튼을 눌러 코드를 수정하세요</li>
-                  <li>블록을 빼거나 순서를 바꿔 오류를 고쳐보세요</li>
+                  <li><strong>🔧 내 절차 고치기</strong> 버튼을 눌러 결과 창을 닫으세요</li>
+                  <li>블록을 빼거나 순서를 바꿔 오류를 고쳐 보세요</li>
                   <li>실행 버튼을 눌러 성공할 때까지 디버깅하세요!</li>
                 </ol>
               </div>
@@ -2732,10 +2759,10 @@ function ManualModal({ isOpen, onClose }) {
           <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
             <h3 className="text-base sm:text-lg font-bold text-blue-800 mb-2">💡 팁</h3>
             <ul className="space-y-2 text-sm sm:text-base">
-              <li>• 실제 상황을 상상하며 순서를 생각해보세요</li>
+              <li>• 실제 상황을 상상하며 순서를 생각해 보세요</li>
               <li>• 실패해도 괜찮아요! 실패에서 배우는 것이 더 많답니다</li>
               <li>• 라면 게임에서는 ⏱️ 버튼을 눌러 기다리는 시간을 조절할 수 있어요</li>
-              <li>• <strong>오류수정 모드</strong>는 디버깅 능력을 키우는 좋은 연습이에요!</li>
+              <li>• <strong>오류 수정 모드</strong>는 디버깅 능력을 키우는 좋은 연습이에요!</li>
             </ul>
           </div>
         </div>
@@ -2760,14 +2787,15 @@ function MainMenu({ onSelectGame }) {
       <div className="max-w-5xl w-full mx-auto">
         <div className="text-center mb-8 sm:mb-10 md:mb-12">
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-center mb-3 sm:mb-4 text-gray-800">
-            🎮 <span
-              className="cursor-pointer hover:text-blue-600 transition-colors border-b-2 border-dashed border-blue-400 hover:border-blue-600"
+            🎮 <button
+              type="button"
+              className="cursor-pointer hover:text-blue-600 transition-colors border-b-2 border-dashed border-blue-400 hover:border-blue-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-300 rounded"
               onClick=${() => setShowProceduralModal(true)}
-              title="클릭하여 절차적 사고와 알고리즘에 대해 알아보기"
-            >알고리즘</span> 놀이터
+              title="눌러서 절차적 사고와 알고리즘 알아보기"
+            >알고리즘</button> 놀이터
           </h1>
           <p className="text-center text-gray-600 mb-4 text-base sm:text-lg md:text-xl px-4">
-            순서를 생각하며 문제를 해결해보세요!
+            순서를 생각하며 문제를 해결해 보세요!
           </p>
           <button
             onClick=${() => setShowManualModal(true)}
@@ -2792,7 +2820,7 @@ function MainMenu({ onSelectGame }) {
           >
             <div className="text-5xl sm:text-6xl md:text-7xl text-center mb-3 sm:mb-4">🌧️</div>
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center mb-2 sm:mb-3 text-gray-800">
-              비오는날 등교 성공하기
+              비 오는 날 등교 성공하기
             </h2>
             <p className="text-sm sm:text-base md:text-lg text-gray-600 text-center leading-relaxed">
               비 오는 날, 학교 가기 전 준비를 올바른 순서로 해보세요!

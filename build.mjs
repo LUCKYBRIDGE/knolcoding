@@ -1,4 +1,4 @@
-import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -16,10 +16,7 @@ const skipNames = new Set([
   'AGENTS.md', 'README.md', 'start-coding-playground.cmd', 'start-coding-playground.command', '.DS_Store'
 ]);
 
-const games = [
-  { id: 'algorithm-playground', patch: patchAlgorithmPlayground },
-  { id: 'coding-drawing', patch: patchCodingDrawing }
-];
+const games = ['algorithm-playground', 'coding-drawing'];
 
 await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
@@ -29,53 +26,32 @@ for (const file of ['index.html', 'privacy.html', '404.html', 'style.css', 'bran
 }
 await cp(path.join(root, 'assets'), path.join(output, 'assets'), { recursive: true });
 
-for (const game of games) {
-  const target = path.join(output, game.id);
-  await cp(path.join(root, 'games', game.id), target, {
+for (const id of games) {
+  const target = path.join(output, id);
+  await cp(path.join(root, 'games', id), target, {
     recursive: true,
     filter: src => {
       const name = path.basename(src);
       return !skipNames.has(name) && !name.startsWith('._');
     }
   });
-  await game.patch(target);
+  await checkGame(id, target);
 }
 
 console.log(`Built static site in dist/ for ${SITE_URL} (no server or database required).`);
 
-async function patchFile(filePath, transform) {
-  const before = await readFile(filePath, 'utf8');
-  const after = transform(before);
-  await writeFile(filePath, after);
-}
-
-function replaceOnce(text, search, replacement, label) {
-  if (!text.includes(search)) throw new Error(`Build patch target not found: ${label}`);
-  return text.replace(search, replacement);
-}
-
-// The source already has a fixed "knol 홈" link to ../ ; rename it for this site.
-async function patchAlgorithmPlayground(target) {
-  await patchFile(path.join(target, 'index.html'), html => replaceOnce(
-    html,
-    'aria-label="knol 홈으로 이동">knol 홈</a>',
-    `aria-label="${HOME_LABEL}으로 이동">${HOME_LABEL}</a>`,
-    'algorithm-playground home link'
-  ));
-}
-
-async function patchCodingDrawing(target) {
-  await patchFile(path.join(target, 'index.html'), html => {
-    if (html.includes('knolcoding-home-link')) return html;
-    const match = html.match(/<div class="header-controls"[^>]*>\r?\n/);
-    if (!match) throw new Error('Build patch target not found: coding-drawing header-controls');
-    const link = `      <a class="knolcoding-home-link btn btn-secondary" href="../" aria-label="${HOME_LABEL}으로 이동" style="background: rgba(255, 255, 255, 0.15); border: 1.5px solid rgba(255, 255, 255, 0.3); color: #ffffff; font-weight: bold; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">${HOME_LABEL}</a>\n`;
-    return html.replace(match[0], match[0] + link);
-  });
-  await patchFile(path.join(target, 'app.js'), js => replaceOnce(
-    js,
-    '실제 pinky-ne.com에서 만든 링크',
-    `실제 ${new URL(SITE_URL).host}에서 만든 링크`,
-    'coding-drawing local share note'
-  ));
+// Both games carry the 놀코딩 home link in their own source. Fail the build if a
+// game loses it or still points at the previous host, e.g. after re-syncing a copy.
+async function checkGame(id, target) {
+  const html = await readFile(path.join(target, 'index.html'), 'utf8');
+  const homeLink = html.match(/<a\b[^>]*\bhref="\.\.\/"[^>]*>([^<]*)<\/a>/);
+  if (!homeLink || !homeLink[1].includes(HOME_LABEL)) {
+    throw new Error(`${id}/index.html is missing the ${HOME_LABEL} link to ../`);
+  }
+  const js = await readFile(path.join(target, 'app.js'), 'utf8');
+  for (const leftover of ['pinky-ne.com', '핑키네']) {
+    if (js.includes(leftover) || html.includes(leftover)) {
+      throw new Error(`${id} still mentions ${leftover}`);
+    }
+  }
 }

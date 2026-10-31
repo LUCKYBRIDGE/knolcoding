@@ -7,7 +7,7 @@ export const EDUCATION_LESSONS = Object.freeze([
     order: 1,
     icon: '①',
     title: '순서대로 움직이기',
-    concept: '순차구조 (Sequence)',
+    concept: '순차구조',
     description: '명령이 앞에서부터 차례대로 실행되는 과정을 익혀요.',
     sizes: Object.freeze([5, 7])
   }),
@@ -34,7 +34,7 @@ export const EDUCATION_LESSONS = Object.freeze([
     order: 4,
     icon: '④',
     title: '가장 짧은 길 찾기',
-    concept: '최단 경로 (Shortest Navigation)',
+    concept: '최단 경로',
     description: '장애물 조건을 살펴보고 실제 이동 칸 수를 줄여요.',
     sizes: Object.freeze([5, 7])
   }),
@@ -44,7 +44,7 @@ export const EDUCATION_LESSONS = Object.freeze([
     icon: '⑤',
     title: '가장 적은 명령으로 가기',
     concept: '최소 명령 최적화',
-    description: '이동 거리와 명령 수를 구분하고 명령 블록 수를 줄여요.',
+    description: '이동 거리와 명령 수를 구분하고 명령 묶음 수를 줄여요.',
     sizes: Object.freeze([5, 7])
   }),
   Object.freeze({
@@ -61,8 +61,8 @@ export const EDUCATION_LESSONS = Object.freeze([
     order: 7,
     icon: '⑦',
     title: '명령 블록 A·B 조합하기',
-    concept: '복합 모듈화 (Block A·B)',
-    description: 'A와 B 두 개의 명령 블록을 함께 사용해 대형 지형을 정복해요.',
+    concept: '두 명령 블록 함께 쓰기',
+    description: '큰 모눈종이에서 명령 블록 A와 B를 함께 써 봐요.',
     sizes: Object.freeze([11])
   })
 ]);
@@ -322,7 +322,7 @@ function makeRoutesLevel(template, index, gridSize) {
       allowedDirections: [...template.directions],
       maxMainCommands: commandLimit
     },
-    guide: `② 이 맵에서는 ${template.directions.map(direction => DIRECTIONS[direction].symbol).join('와 ')} 1칸 명령만 사용합니다. ${commandLimit}번 안에 목표점에 도착하는 서로 다른 순서를 세 가지 찾아보세요.`
+    guide: `② 이 맵에서는 ${template.directions.map(direction => DIRECTIONS[direction].symbol).join(', ')} 방향의 1칸 명령만 사용합니다. ${commandLimit}번 안에 목표점에 도착하는 서로 다른 순서를 세 가지 찾아보세요.`
   };
 }
 
@@ -507,7 +507,7 @@ const LESSON_GUIDES = Object.freeze({
   routes: '② 같은 목표점에 도착하는 방향 순서가 다른 길을 두 가지 찾아 비교해 보세요.',
   compress: '③ 주어진 한 칸 이동과 정확히 같은 길을, 같은 방향 명령을 묶어 더 적은 명령으로 나타내세요.',
   shortest: '④ 실제로 이동하는 칸 수가 가장 적은 안전 경로를 찾아보세요.',
-  minimum: '⑤ 이동 칸 수와 관계없이 목표에 도착하는 명령 블록 수를 가장 적게 만들어 보세요.'
+  minimum: '⑤ 이동 칸 수와 관계없이 목표에 도착하는 명령 묶음 수를 가장 적게 만들어 보세요.'
 });
 
 function addEducationProblemKeys(levels, activityMode, lessonId, gridSize) {
@@ -688,6 +688,6 @@ function prepareCompressLevel(level, index, gridSize) {
       allowDistanceEditing: true,
       mergeAdjacent: true
     },
-    guide: '③ 제시된 한 칸 이동을 같은 방향끼리 묶어서 더 짧고 명쾌한 명령 조합으로 축약해 보세요.'
+    guide: '③ 제시된 한 칸 이동을 같은 방향끼리 묶어서 더 짧은 명령으로 줄여 보세요.'
   };
 }

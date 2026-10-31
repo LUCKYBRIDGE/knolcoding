@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>모눈종이 코딩 놀이터 - 8방향 모눈종이 알고리즘 코딩 학습 앱</title>
-  <meta name="description" content="미사일 이동, 장애물 피하기, 무지개 그림 그리기, 차례대로 하는 도둑 잡기를 재미있게 즐기는 8방향 모눈종이 순차 알고리즘 코딩 학습 앱!">
+  <meta name="description" content="미사일 이동, 장애물 피하기, 그림 보고 명령어 만들기, 명령어 보고 그림 그리기, 도둑 잡기를 재미있게 즐기는 8방향 모눈종이 순차 알고리즘 코딩 학습 앱!">
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./style.css">
 </head>
@@ -20,6 +20,7 @@
       </div>
     </div>
     <div class="header-controls">
+      <a class="knolcoding-home-link btn btn-secondary" href="../" aria-label="놀코딩 홈으로 이동">놀코딩 홈</a>
       <button id="header-mode-change-btn" class="btn btn-secondary header-mode-change-btn" type="button" hidden>🧭 모드 변경</button>
       <button id="worksheet-open-btn" class="btn btn-secondary" style="background: rgba(16, 185, 129, 0.15); border: 1.5px solid rgba(16, 185, 129, 0.4); color: #34d399; font-weight: bold;">📄 종이활동지 만들기</button>
       <button id="mute-btn" class="btn btn-secondary" aria-label="소리 켜기 또는 끄기">🔊 소리 켜짐</button>
@@ -30,7 +31,7 @@
   <main id="file-launch-screen" class="file-launch-screen" hidden aria-labelledby="file-launch-title">
     <section class="file-launch-card">
       <span class="file-launch-icon" aria-hidden="true">🧭</span>
-      <p class="selection-eyebrow">LOCAL START GUIDE</p>
+      <p class="selection-eyebrow">내 컴퓨터에서 시작하기</p>
       <h2 id="file-launch-title">놀이터를 실행 파일로 열어 주세요</h2>
       <p class="file-launch-lead">
         이 웹앱은 안전한 모듈 방식으로 만들어져서 <b>index.html을 직접 열면</b> 브라우저가 실행을 막습니다.
@@ -59,7 +60,7 @@
   <main id="mode-selection-screen" class="mode-selection-screen" aria-labelledby="mode-selection-title">
     <section class="mode-selection-card">
       <div class="mode-selection-heading">
-        <span class="selection-eyebrow">PLAY MODE</span>
+        <span class="selection-eyebrow">활동 고르기</span>
         <h2 id="mode-selection-title" tabindex="-1">어떤 코딩 활동을 시작할까요?</h2>
         <p>하고 싶은 모드를 고른 뒤 바로 활동을 시작하세요. 게임 중에도 상단에서 언제든 바꿀 수 있습니다.</p>
       </div>
@@ -69,7 +70,7 @@
           <div class="mode-choice-head">
             <span class="mode-choice-icon" aria-hidden="true">🚀</span>
             <div>
-              <span class="mode-choice-number">MODE 1 · 활동 1–2</span>
+              <span class="mode-choice-number">모드 1 · 활동 1–2</span>
               <h3>미사일 모드</h3>
             </div>
           </div>
@@ -102,7 +103,7 @@
           <div class="mode-choice-head">
             <span class="mode-choice-icon" aria-hidden="true">🎨</span>
             <div>
-              <span class="mode-choice-number">MODE 2 · 활동 3–4 + 도전</span>
+              <span class="mode-choice-number">모드 2 · 활동 3–4 + 도전</span>
               <h3>그림 모드</h3>
             </div>
           </div>
@@ -124,9 +125,9 @@
                 <small>배운 방법으로 그림 문제를 풀어 봐요.</small>
               </div>
               <div class="drawing-challenge-buttons">
-                <button class="mode-start-btn" type="button" data-start-activity="debug">🎨 그림 보고 명령 만들기</button>
-                <button class="mode-start-btn" type="button" data-start-activity="debug_guide">📜 명령 보고 그림 그리기</button>
-                <button class="mode-start-btn" type="button" data-start-activity="single_stroke">🖌️ 한붓그리기 모드</button>
+                <button class="mode-start-btn" type="button" data-start-activity="debug">🎨 그림 보고 명령어 만들기</button>
+                <button class="mode-start-btn" type="button" data-start-activity="debug_guide">📜 명령어 보고 그림 그리기</button>
+                <button class="mode-start-btn" type="button" data-start-activity="single_stroke">🖌️ 한붓그리기</button>
               </div>
             </div>
           </div>
@@ -136,7 +137,7 @@
           <div class="mode-choice-head">
             <span class="mode-choice-icon" aria-hidden="true">👮‍♂️</span>
             <div>
-              <span class="mode-choice-number">MODE 3 · 활동 6</span>
+              <span class="mode-choice-number">모드 3 · 활동 6</span>
               <h3>도둑 잡기 모드</h3>
             </div>
           </div>
@@ -151,7 +152,7 @@
           <div class="mode-choice-head">
             <span class="mode-choice-icon" aria-hidden="true">✏️</span>
             <div>
-              <span class="mode-choice-number">MODE 4 · 활동 5</span>
+              <span class="mode-choice-number">모드 4 · 활동 5</span>
               <h3>문제 만들기 모드</h3>
             </div>
           </div>
@@ -244,8 +245,8 @@
       <button id="activity-tab-debug" class="activity-tab-btn" data-learning-mode="drawing" data-mode="debug" data-activity-label="그림 보고 명령어 만들기" role="tab" aria-controls="learning-workspace" aria-selected="false" tabindex="-1" hidden>
         <span>🎨</span> 3. 그림 보고 명령어 만들기
       </button>
-      <button id="activity-tab-debug-guide" class="activity-tab-btn" data-learning-mode="drawing" data-mode="debug_guide" data-activity-label="명령 보고 그림 그리기" role="tab" aria-controls="learning-workspace" aria-selected="false" tabindex="-1" hidden>
-        <span>📜</span> 4. 명령 보고 그림 그리기
+      <button id="activity-tab-debug-guide" class="activity-tab-btn" data-learning-mode="drawing" data-mode="debug_guide" data-activity-label="명령어 보고 그림 그리기" role="tab" aria-controls="learning-workspace" aria-selected="false" tabindex="-1" hidden>
+        <span>📜</span> 4. 명령어 보고 그림 그리기
       </button>
       <button id="activity-tab-single-stroke" class="activity-tab-btn" data-learning-mode="drawing" data-mode="single_stroke" data-activity-label="한붓그리기" role="tab" aria-controls="learning-workspace" aria-selected="false" tabindex="-1" hidden>
         <span>🖌️</span> 한붓그리기
@@ -344,7 +345,7 @@
     <section id="education-curriculum-panel" class="education-curriculum-panel" aria-labelledby="education-curriculum-title" hidden>
       <div class="education-curriculum-heading">
         <div>
-          <span id="education-curriculum-eyebrow" class="education-eyebrow">MISSILE LEARNING PATH</span>
+          <span id="education-curriculum-eyebrow" class="education-eyebrow">미사일 학습 순서</span>
           <h3 id="education-curriculum-title">🚀 미사일 개념 교육</h3>
           <p id="education-curriculum-intro">순차구조부터 최소 명령과 나만의 명령 블록까지 차례대로 익혀요.</p>
         </div>
@@ -451,7 +452,7 @@
       <div id="student-history-controls" class="student-history-controls" role="group" aria-label="그림 그리기 도구">
         <button id="drawing-ghost-toggle" class="btn btn-secondary drawing-ghost-btn" type="button" aria-pressed="false" hidden>
           <span class="ghost-icon">👁️</span>
-          <span class="ghost-label">붓 경로 힌트: OFF</span>
+          <span class="ghost-label">붓 경로 힌트: 꺼짐</span>
         </button>
         <button id="student-undo-btn" class="btn btn-secondary student-history-btn" type="button" disabled>↩️ 되돌리기</button>
         <button id="student-redo-btn" class="btn btn-secondary student-history-btn" type="button" disabled>↪️ 다시 실행</button>
@@ -686,8 +687,8 @@
             <option value="mix">🌈 여러 활동 고루 섞기</option>
             <option value="shortest">🎯 1. 미사일 이동</option>
             <option value="routing">🧭 2. 장애물 피하기</option>
-            <option value="debug">🎨 3. 그림 보고 만들기</option>
-            <option value="debug_guide">📜 4. 명령 보고 그림 그리기</option>
+            <option value="debug">🎨 3. 그림 보고 명령어 만들기</option>
+            <option value="debug_guide">📜 4. 명령어 보고 그림 그리기</option>
             <option value="chase">👮‍♂️ 6. 도둑 잡기</option>
           </select>
         </div>

@@ -2050,9 +2050,9 @@ test('chase keeps every arrest as a success and separately identifies the earlie
 });
 
 test('next-problem labels match the selected challenge flow', () => {
-  assert.equal(getNextProblemButtonLabel('debug', 'stage'), '다음 그림 문제 ➡️');
+  assert.equal(getNextProblemButtonLabel('debug', 'stage'), '다음 명령어 만들기 문제 ➡️');
   assert.equal(getNextProblemButtonLabel('routing', 'random'), '다음 도전 장애물 문제 ➡️');
-  assert.equal(getNextProblemButtonLabel('chase', 'timeattack'), '다음 추격 문제 이어서 도전 ➡️');
+  assert.equal(getNextProblemButtonLabel('chase', 'timeattack'), '다음 도둑 잡기 문제 이어서 도전 ➡️');
   assert.equal(getNextProblemButtonLabel('single_stroke', 'infinite'), '다음 한붓그리기 문제 계속 도전 ➡️');
 });
 
