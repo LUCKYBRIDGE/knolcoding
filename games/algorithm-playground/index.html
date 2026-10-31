@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>알고리즘 놀이터 · 놀코딩</title>
+    <meta name="description" content="라면 끓이기, 비 오는 날 등교하기처럼 익숙한 일을 블록 순서로 맞추며 알고리즘을 익히는 활동입니다." />
+    <link rel="icon" type="image/svg+xml" href="../assets/knolcoding-mark.svg" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      img[src*="images-game-pixel"] {
+        image-rendering: pixelated;
+      }
+
+      /* 결과 창(z-index 50)보다 아래에 두어 창을 가리지 않게 한다. */
+      .knolcoding-home-link {
+        position: fixed;
+        top: 14px;
+        right: 14px;
+        z-index: 40;
+        min-height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 14px;
+        border: 1px solid #d3e7da;
+        border-radius: 999px;
+        color: #1b2620;
+        background: rgba(255, 255, 255, 0.94);
+        font-size: 14px;
+        font-weight: 800;
+        text-decoration: none;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
+      }
+
+      .knolcoding-home-link:hover {
+        border-color: #23774a;
+        color: #23774a;
+      }
+
+      .knolcoding-home-link:focus-visible {
+        outline: 3px solid #23774a;
+        outline-offset: 2px;
+      }
+
+      @media (max-width: 640px) {
+        .knolcoding-home-link {
+          top: 10px;
+          right: 10px;
+          padding: 0 11px;
+          font-size: 13px;
+        }
+      }
+    </style>
+    <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/htm@3.1.1/dist/htm.umd.js"></script>
+  </head>
+  <body>
+    <a class="knolcoding-home-link" href="../" aria-label="놀코딩 홈으로 이동">놀코딩 홈</a>
+    <div id="root"></div>
+    <script src="./app.js?v=20261031"></script>
+  </body>
+</html>

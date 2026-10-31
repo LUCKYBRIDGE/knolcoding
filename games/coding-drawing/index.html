@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>모눈종이 코딩 놀이터 - 8방향 모눈종이 알고리즘 코딩 학습 앱</title>
+  <meta name="description" content="미사일 이동, 장애물 피하기, 그림 보고 명령어 만들기, 명령어 보고 그림 그리기, 도둑 잡기를 재미있게 즐기는 8방향 모눈종이 순차 알고리즘 코딩 학습 앱!">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body data-view="select">
+
+  <!-- 상단 브랜드 헤더 -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon">🧭</div>
+      <div>
+        <h1 class="brand-title">모눈종이 코딩 놀이터</h1>
+        <p class="brand-sub">8방향 알고리즘으로 배우는 입력 · 명령어 · 처리 · 출력 학습 활동</p>
+      </div>
+    </div>
+    <div class="header-controls">
+      <a class="knolcoding-home-link btn btn-secondary" href="../" aria-label="놀코딩 홈으로 이동">놀코딩 홈</a>
+      <button id="header-mode-change-btn" class="btn btn-secondary header-mode-change-btn" type="button" hidden>🧭 모드 변경</button>
+      <button id="worksheet-open-btn" class="btn btn-secondary" style="background: rgba(16, 185, 129, 0.15); border: 1.5px solid rgba(16, 185, 129, 0.4); color: #34d399; font-weight: bold;">📄 종이활동지 만들기</button>
+      <button id="mute-btn" class="btn btn-secondary" aria-label="소리 켜기 또는 끄기">🔊 소리 켜짐</button>
+    </div>
+  </header>
+
+  <!-- index.html을 직접 연 경우: 브라우저 보안 제한을 설명하고 정상 실행 방법을 안내 -->
+  <main id="file-launch-screen" class="file-launch-screen" hidden aria-labelledby="file-launch-title">
+    <section class="file-launch-card">
+      <span class="file-launch-icon" aria-hidden="true">🧭</span>
+      <p class="selection-eyebrow">내 컴퓨터에서 시작하기</p>
+      <h2 id="file-launch-title">놀이터를 실행 파일로 열어 주세요</h2>
+      <p class="file-launch-lead">
+        이 웹앱은 안전한 모듈 방식으로 만들어져서 <b>index.html을 직접 열면</b> 브라우저가 실행을 막습니다.
+        아래 방법으로 시작하면 정상적으로 이용할 수 있습니다.
+      </p>
+      <div class="file-launch-options">
+        <article>
+          <strong><span aria-hidden="true">🍎</span> Mac에서</strong>
+          <code>start-coding-playground.command</code>
+          <span>파일을 두 번 클릭하세요.</span>
+        </article>
+        <article>
+          <strong><span aria-hidden="true">🪟</span> Windows에서</strong>
+          <code>start-coding-playground.cmd</code>
+          <span>파일을 두 번 클릭하세요.</span>
+        </article>
+      </div>
+      <p class="file-launch-note">
+        처음 실행하거나 컴퓨터를 바꾸면 현재 운영체제에 맞게 필요한 파일을 자동으로 준비합니다.
+      </p>
+      <a class="file-launch-retry" href="http://127.0.0.1:5173/">실행 후 놀이터 열기</a>
+    </section>
+  </main>
+
+  <!-- 첫 진입: 4개 모드에서 실제 활동을 선택하는 전용 화면 -->
+  <main id="mode-selection-screen" class="mode-selection-screen" aria-labelledby="mode-selection-title">
+    <section class="mode-selection-card">
+      <div class="mode-selection-heading">
+        <span class="selection-eyebrow">활동 고르기</span>
+        <h2 id="mode-selection-title" tabindex="-1">어떤 코딩 활동을 시작할까요?</h2>
+        <p>하고 싶은 모드를 고른 뒤 바로 활동을 시작하세요. 게임 중에도 상단에서 언제든 바꿀 수 있습니다.</p>
+      </div>
+
+      <div class="mode-choice-grid">
+        <article class="mode-choice-card missile">
+          <div class="mode-choice-head">
+            <span class="mode-choice-icon" aria-hidden="true">🚀</span>
+            <div>
+              <span class="mode-choice-number">모드 1 · 활동 1–2</span>
+              <h3>미사일 모드</h3>
+            </div>
+          </div>
+          <p>목표까지 가장 짧게 이동하거나 장애물을 피해 안전한 경로를 설계합니다.</p>
+          <div class="mode-choice-actions drawing-choice-actions">
+            <div class="drawing-choice-group drawing-education-choice" role="group" aria-labelledby="missile-education-choice-title">
+              <div class="drawing-choice-group-heading">
+                <span id="missile-education-choice-title">📚 교육모드</span>
+                <small>처음이 아니어도 언제든 다시 복습할 수 있어요.</small>
+              </div>
+              <div class="education-entry-buttons">
+                <button id="missile-education-start-btn" class="mode-start-btn primary" type="button">처음부터 시작</button>
+                <button id="missile-education-resume-btn" class="mode-start-btn" type="button" hidden>이어하기</button>
+              </div>
+            </div>
+            <div class="drawing-choice-group drawing-challenge-choice" role="group" aria-labelledby="missile-challenge-choice-title">
+              <div class="drawing-choice-group-heading">
+                <span id="missile-challenge-choice-title">🎯 도전모드</span>
+                <small>배운 개념을 여러 문제에 적용해 봐요.</small>
+              </div>
+              <div class="drawing-challenge-buttons">
+                <button class="mode-start-btn primary" type="button" data-start-activity="shortest">🚀 미사일 이동</button>
+                <button class="mode-start-btn" type="button" data-start-activity="routing">🧭 장애물 피하기</button>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="mode-choice-card drawing">
+          <div class="mode-choice-head">
+            <span class="mode-choice-icon" aria-hidden="true">🎨</span>
+            <div>
+              <span class="mode-choice-number">모드 2 · 활동 3–4 + 도전</span>
+              <h3>그림 모드</h3>
+            </div>
+          </div>
+          <p>명령의 순서와 여러 그리기 방법을 익힌 뒤, 원하는 그림 활동에 도전해 보세요.</p>
+          <div class="mode-choice-actions drawing-choice-actions">
+            <div class="drawing-choice-group drawing-education-choice" role="group" aria-labelledby="drawing-education-choice-title">
+              <div class="drawing-choice-group-heading">
+                <span id="drawing-education-choice-title">📚 교육모드</span>
+                <small>그림 명령을 단계별로 익히고 다시 복습해요.</small>
+              </div>
+              <div class="education-entry-buttons">
+                <button id="drawing-education-start-btn" class="mode-start-btn primary" type="button">처음부터 시작</button>
+                <button id="drawing-education-resume-btn" class="mode-start-btn" type="button" hidden>이어하기</button>
+              </div>
+            </div>
+            <div class="drawing-choice-group drawing-challenge-choice" role="group" aria-labelledby="drawing-challenge-choice-title">
+              <div class="drawing-choice-group-heading">
+                <span id="drawing-challenge-choice-title">🎯 도전모드</span>
+                <small>배운 방법으로 그림 문제를 풀어 봐요.</small>
+              </div>
+              <div class="drawing-challenge-buttons">
+                <button class="mode-start-btn" type="button" data-start-activity="debug">🎨 그림 보고 명령어 만들기</button>
+                <button class="mode-start-btn" type="button" data-start-activity="debug_guide">📜 명령어 보고 그림 그리기</button>
+                <button class="mode-start-btn" type="button" data-start-activity="single_stroke">🖌️ 한붓그리기</button>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="mode-choice-card chase">
+          <div class="mode-choice-head">
+            <span class="mode-choice-icon" aria-hidden="true">👮‍♂️</span>
+            <div>
+              <span class="mode-choice-number">모드 3 · 활동 6</span>
+              <h3>도둑 잡기 모드</h3>
+            </div>
+          </div>
+          <p>도둑의 공개된 이동 순서를 읽고 다음 위치를 예측해 길목을 막습니다.</p>
+          <div class="mode-choice-actions single">
+            <span class="mode-choice-section-label">🎯 도전모드</span>
+            <button class="mode-start-btn primary" type="button" data-start-activity="chase">👮‍♂️ 도둑 잡기 시작</button>
+          </div>
+        </article>
+
+        <article class="mode-choice-card creator">
+          <div class="mode-choice-head">
+            <span class="mode-choice-icon" aria-hidden="true">✏️</span>
+            <div>
+              <span class="mode-choice-number">모드 4 · 활동 5</span>
+              <h3>문제 만들기 모드</h3>
+            </div>
+          </div>
+          <p>미사일 또는 그림 문제를 직접 만들고 링크·QR·종이활동지로 공유합니다.</p>
+          <div class="mode-choice-actions single">
+            <button class="mode-start-btn primary" type="button" data-start-activity="creator">✏️ 나만의 문제 만들기</button>
+          </div>
+        </article>
+      </div>
+
+      <aside class="foundation-practice-card">
+        <div>
+          <strong>🧠 본활동 전에 연습하고 싶나요?</strong>
+          <span>반복되는 한 칸 명령을 더 짧고 효율적인 명령으로 바꾸어 보세요.</span>
+        </div>
+        <button class="foundation-start-btn" type="button" data-start-activity="efficiency">기초 연습 시작</button>
+      </aside>
+
+      <div class="mode-selection-note" role="note">
+        <strong>활동 중에도 바로 변경 가능</strong>
+        <span>플레이 화면 상단의 <b>빠른 모드 변경</b>을 펼치거나, 헤더의 <b>모드 변경</b>으로 이 화면에 돌아올 수 있습니다.</span>
+      </div>
+    </section>
+  </main>
+
+  <div id="play-screen" class="play-screen" hidden>
+    <section class="workspace-mode-toolbar" aria-label="현재 활동과 모드 변경">
+      <div class="workspace-current-mode">
+        <span class="workspace-current-label">현재 활동</span>
+        <strong id="workspace-current-mode">🚀 미사일 모드</strong>
+        <span id="workspace-current-activity">1. 미사일 이동</span>
+      </div>
+      <button id="quick-mode-toggle" class="quick-mode-toggle" type="button" aria-expanded="false" aria-controls="mode-picker-panel">
+        <span aria-hidden="true">🧭</span>
+        <span id="quick-mode-toggle-text">빠른 모드 변경 펼치기</span>
+      </button>
+    </section>
+
+    <div id="mode-picker-panel" class="mode-picker-panel" hidden>
+  <!-- 1단계: 6개 활동을 묶은 4개 상위 모드 선택 -->
+  <section class="mode-nav-shell" aria-labelledby="mode-nav-title">
+    <div class="hierarchy-heading">
+      <span class="hierarchy-step" aria-hidden="true">1</span>
+      <div>
+        <h2 id="mode-nav-title">모드 선택</h2>
+        <p>하고 싶은 활동 묶음을 먼저 고르세요.</p>
+      </div>
+    </div>
+    <nav class="learning-mode-tabs" role="tablist" aria-label="상위 모드 선택">
+      <button id="learning-mode-tab-missile" class="learning-mode-btn active" data-learning-mode="missile" role="tab" aria-controls="activity-selection-shell" aria-selected="true" tabindex="0">
+        <span class="mode-icon" aria-hidden="true">🚀</span>
+        <span class="mode-copy"><strong>미사일 모드</strong><small>활동 1 · 2</small></span>
+      </button>
+      <button id="learning-mode-tab-drawing" class="learning-mode-btn" data-learning-mode="drawing" role="tab" aria-controls="activity-selection-shell" aria-selected="false" tabindex="-1">
+        <span class="mode-icon" aria-hidden="true">🎨</span>
+        <span class="mode-copy"><strong>그림 모드</strong><small>활동 3 · 4</small></span>
+      </button>
+      <button id="learning-mode-tab-chase" class="learning-mode-btn" data-learning-mode="chase" role="tab" aria-controls="activity-selection-shell" aria-selected="false" tabindex="-1">
+        <span class="mode-icon" aria-hidden="true">👮‍♂️</span>
+        <span class="mode-copy"><strong>도둑 잡기 모드</strong><small>활동 6</small></span>
+      </button>
+      <button id="learning-mode-tab-creator" class="learning-mode-btn" data-learning-mode="creator" role="tab" aria-controls="activity-selection-shell" aria-selected="false" tabindex="-1">
+        <span class="mode-icon" aria-hidden="true">✏️</span>
+        <span class="mode-copy"><strong>문제 만들기 모드</strong><small>활동 5</small></span>
+      </button>
+    </nav>
+  </section>
+
+  <!-- 2단계: 선택한 모드 안의 활동 선택 -->
+  <section id="activity-selection-shell" class="activity-nav-shell" aria-labelledby="activity-nav-title">
+    <div class="activity-heading-row">
+      <div class="hierarchy-heading">
+        <span class="hierarchy-step secondary" aria-hidden="true">2</span>
+        <div>
+          <h2 id="activity-nav-title">활동 선택</h2>
+          <p id="activity-nav-description">미사일 모드에서 연습할 활동을 고르세요.</p>
+        </div>
+      </div>
+      <button id="prep-activity-btn" class="prep-activity-btn" type="button" data-mode="efficiency" aria-pressed="false">
+        🧠 기초 연습: 명령을 효율적으로 쓰기
+      </button>
+    </div>
+    <nav class="activity-tabs" role="tablist" aria-label="선택한 모드의 활동 선택">
+      <button id="activity-tab-shortest" class="activity-tab-btn active" data-learning-mode="missile" data-mode="shortest" data-activity-label="미사일 이동" role="tab" aria-controls="learning-workspace" aria-selected="true" tabindex="0">
+        <span>🎯</span> 1. 미사일 이동
+      </button>
+      <button id="activity-tab-routing" class="activity-tab-btn" data-learning-mode="missile" data-mode="routing" data-activity-label="장애물 피하기" role="tab" aria-controls="learning-workspace" aria-selected="false" tabindex="-1">
+        <span>🧭</span> 2. 장애물 피하기
+      </button>
+      <button id="activity-tab-debug" class="activity-tab-btn" data-learning-mode="drawing" data-mode="debug" data-activity-label="그림 보고 명령어 만들기" role="tab" aria-controls="learning-workspace" aria-selected="false" tabindex="-1" hidden>
+        <span>🎨</span> 3. 그림 보고 명령어 만들기
+      </button>
+      <button id="activity-tab-debug-guide" class="activity-tab-btn" data-learning-mode="drawing" data-mode="debug_guide" data-activity-label="명령어 보고 그림 그리기" role="tab" aria-controls="learning-workspace" aria-selected="false" tabindex="-1" hidden>
+        <span>📜</span> 4. 명령어 보고 그림 그리기
+      </button>
+      <button id="activity-tab-single-stroke" class="activity-tab-btn" data-learning-mode="drawing" data-mode="single_stroke" data-activity-label="한붓그리기" role="tab" aria-controls="learning-workspace" aria-selected="false" tabindex="-1" hidden>
+        <span>🖌️</span> 한붓그리기
+      </button>
+      <button id="activity-tab-chase" class="activity-tab-btn" data-learning-mode="chase" data-mode="chase" data-activity-label="도둑 잡기" role="tab" aria-controls="learning-workspace" aria-selected="false" tabindex="-1" hidden>
+        <span>👮‍♂️</span> 6. 도둑 잡기
+      </button>
+      <button id="activity-tab-creator" class="activity-tab-btn" data-learning-mode="creator" data-mode="creator" data-activity-label="나만의 문제 만들기" role="tab" aria-controls="learning-workspace" aria-selected="false" tabindex="-1" hidden>
+        <span>✏️</span> 5. 나만의 문제 만들기
+      </button>
+    </nav>
+  </section>
+    </div>
+
+  <!-- 선택한 활동의 도전 방식 -->
+  <section id="challenge-settings-shell" class="challenge-settings-shell" aria-labelledby="challenge-settings-title">
+    <div class="challenge-heading-row">
+      <div class="hierarchy-heading">
+        <span class="hierarchy-step tertiary" aria-hidden="true">⚙</span>
+        <div>
+          <h2 id="challenge-settings-title">학습 방식 설정</h2>
+          <p>교육모드로 배우고 복습하거나, 도전모드에서 문제를 풀어 보세요.</p>
+        </div>
+      </div>
+      <p id="active-mode-summary" class="active-mode-summary" role="status" aria-live="polite">현재: 미사일 모드 · 미사일 이동 · 5x5 · 자유 도전 · 최단 이동</p>
+    </div>
+    <div id="experience-kind-switch" class="experience-kind-switch" role="group" aria-label="교육모드 또는 도전모드 선택">
+      <button id="education-kind-btn" class="experience-kind-btn" type="button" aria-pressed="false">
+        <strong>📚 교육모드</strong>
+        <small>단계별 학습·복습</small>
+      </button>
+      <button id="challenge-kind-btn" class="experience-kind-btn active" type="button" aria-pressed="true">
+        <strong>🎯 도전모드</strong>
+        <small>배운 개념 적용</small>
+      </button>
+    </div>
+    <div class="challenge-bar">
+      <div id="challenge-mode-group" class="challenge-select-group">
+        <label for="challenge-mode-select" class="challenge-label">🎮 도전 방식:</label>
+        <select id="challenge-mode-select" class="challenge-select-dropdown" aria-label="도전 방식 선택" aria-describedby="challenge-mode-hint">
+          <option value="stage" selected>🎲 자유 도전</option>
+          <option value="random">🎯 10문제 도전</option>
+          <option value="timeattack">⏱️ 60초 도전</option>
+          <option value="multisolution">🧭 여러 풀이 찾기</option>
+        </select>
+        <small id="challenge-mode-hint" class="solution-rule-hint">기록 부담 없이 한 문제씩 자유롭게 풀어요.</small>
+      </div>
+
+      <div id="challenge-size-group" class="challenge-select-group">
+        <label for="challenge-size-select" class="challenge-label">📐 모눈종이 크기:</label>
+        <select id="challenge-size-select" class="challenge-select-dropdown" aria-label="모눈종이 크기 선택">
+          <option value="5" selected>5x5</option>
+          <option value="7">7x7</option>
+          <option value="9">9x9</option>
+          <option value="11">11x11</option>
+        </select>
+      </div>
+
+      <div id="missile-solution-rule-control" class="challenge-select-group solution-rule-select-group" hidden>
+        <label for="missile-solution-rule-select" class="challenge-label">🎯 풀이 기준:</label>
+        <select id="missile-solution-rule-select" class="challenge-select-dropdown" aria-describedby="missile-solution-rule-hint">
+          <option value="shortest" selected>📏 최단 이동</option>
+          <option value="minimum_commands">🧩 최소 명령</option>
+        </select>
+        <small id="missile-solution-rule-hint" class="solution-rule-hint">실제로 이동하는 칸 수가 가장 적어야 성공</small>
+      </div>
+
+      <label id="drawing-minimum-rule-control" class="shortest-rule-control" for="drawing-minimum-toggle" hidden>
+        <input id="drawing-minimum-toggle" type="checkbox">
+        <span class="shortest-rule-copy">
+          <strong>🖌️ 최소 붓 이동만 성공 인정</strong>
+          <small>끄면 그림 완성도 성공, 최소 횟수 완성은 완전 성공</small>
+        </span>
+      </label>
+
+      <div id="challenge-status-bar" class="challenge-status-bar" style="display: none;">
+        <div class="status-metric" id="timer-metric" style="display: none;">
+          <span>⏳ 남은 시간:</span>
+          <strong id="challenge-timer">60초</strong>
+        </div>
+        <div class="status-metric">
+          <span id="challenge-solved-label">🏆 성공 문제:</span>
+          <strong id="challenge-solved-count">0개</strong>
+        </div>
+        <div id="streak-metric" class="status-metric">
+          <span>🔥 연속 성공:</span>
+          <strong id="challenge-streak">0</strong>
+        </div>
+        <div id="score-metric" class="status-metric">
+          <span>💯 누적 점수:</span>
+          <strong id="challenge-score">0점</strong>
+        </div>
+        <button id="end-challenge-btn" class="btn btn-secondary" style="padding: 4px 12px; font-size: 12px; background: rgba(239, 68, 68, 0.2); border: 1.5px solid rgba(239, 68, 68, 0.5); color: #f87171; font-weight: bold;">🛑 도전 종료 및 결과 보기</button>
+      </div>
+    </div>
+    <section id="education-curriculum-panel" class="education-curriculum-panel" aria-labelledby="education-curriculum-title" hidden>
+      <div class="education-curriculum-heading">
+        <div>
+          <span id="education-curriculum-eyebrow" class="education-eyebrow">미사일 학습 순서</span>
+          <h3 id="education-curriculum-title">🚀 미사일 개념 교육</h3>
+          <p id="education-curriculum-intro">순차구조부터 최소 명령과 나만의 명령 블록까지 차례대로 익혀요.</p>
+        </div>
+        <span id="education-current-concept" class="education-current-concept">1단계 · 순차구조</span>
+      </div>
+      <div id="education-lesson-list" class="education-lesson-list" role="tablist" aria-label="미사일 교육 과정">
+        <button class="education-lesson-btn active" type="button" role="tab" aria-selected="true" data-education-group="missile" data-education-lesson="sequence">
+          <span>① 순서대로 움직이기</span><small>순차구조</small>
+        </button>
+        <button class="education-lesson-btn" type="button" role="tab" aria-selected="false" data-education-group="missile" data-education-lesson="routes">
+          <span>② 여러 길 찾아보기</span><small>같은 목표, 다른 과정</small>
+        </button>
+        <button class="education-lesson-btn" type="button" role="tab" aria-selected="false" data-education-group="missile" data-education-lesson="compress">
+          <span>③ 같은 방향 명령 묶기</span><small>연속 명령 압축</small>
+        </button>
+        <button class="education-lesson-btn" type="button" role="tab" aria-selected="false" data-education-group="missile" data-education-lesson="shortest">
+          <span>④ 가장 짧은 길 찾기</span><small>최단 경로</small>
+        </button>
+        <button class="education-lesson-btn" type="button" role="tab" aria-selected="false" data-education-group="missile" data-education-lesson="minimum">
+          <span>⑤ 가장 적은 명령으로 가기</span><small>최소 명령</small>
+        </button>
+        <button class="education-lesson-btn" type="button" role="tab" aria-selected="false" data-education-group="missile" data-education-lesson="block_one">
+          <span>⑥ 나만의 명령 블록 만들기</span><small>9x9 · 명령 블록 A</small>
+        </button>
+        <button class="education-lesson-btn" type="button" role="tab" aria-selected="false" data-education-group="missile" data-education-lesson="block_two">
+          <span>⑦ 명령 블록 A·B 조합하기</span><small>11x11 · 두 블록 조합</small>
+        </button>
+        <button id="education-lesson-draw-sequence" class="education-lesson-btn" type="button" role="tab" aria-selected="false" aria-controls="drawing-education-task-panel" data-education-group="drawing" data-education-lesson="draw_sequence" hidden>
+          <span>① 순서대로 그림 그리기</span><small>명령의 순서와 기본 붓질</small>
+        </button>
+        <button id="education-lesson-draw-methods" class="education-lesson-btn" type="button" role="tab" aria-selected="false" aria-controls="drawing-education-task-panel" data-education-group="drawing" data-education-lesson="draw_methods" hidden>
+          <span>② 같은 그림, 다른 방법으로 그리기</span><small>다른 실행 경로와 명령 조합</small>
+        </button>
+        <button id="education-lesson-draw-minimum-commands" class="education-lesson-btn" type="button" role="tab" aria-selected="false" aria-controls="drawing-education-task-panel" data-education-group="drawing" data-education-lesson="draw_minimum_commands" hidden>
+          <span>③ 가장 적은 명령으로 그림 그리기</span><small>이동 묶음과 붓 명령까지 세기</small>
+        </button>
+      </div>
+      <p id="education-lesson-description" class="education-lesson-description" role="status">
+        명령이 앞에서부터 차례대로 실행되는 과정을 익혀요.
+      </p>
+      <div id="education-tool-policy" class="education-tool-policy" aria-live="polite" hidden></div>
+    </section>
+    <section id="multi-solution-panel" class="multi-solution-panel" aria-labelledby="multi-solution-title" hidden>
+      <div class="multi-solution-heading">
+        <h3 id="multi-solution-title">🧭 찾은 최단 풀이 목록</h3>
+        <span id="multi-solution-list-count" class="multi-solution-count">0 / 0</span>
+      </div>
+      <ol id="multi-solution-list" class="multi-solution-list" aria-live="polite">
+        <li class="multi-solution-empty">아직 찾은 풀이가 없습니다. 첫 번째 최단 명령 조합을 만들어 보세요.</li>
+      </ol>
+    </section>
+  </section>
+
+  <!-- 메인 콘텐트 영역 -->
+  <main id="learning-workspace" class="main-container" role="tabpanel" aria-labelledby="activity-tab-shortest">
+
+    <!-- 좌측: 모눈종이 화면 -->
+    <section class="glass-card grid-card">
+      <div class="card-title">
+        <span id="mode-title-text" tabindex="-1">🎯 활동 1: 미사일 이동</span>
+        <span id="level-indicator" class="brand-sub">5x5 · 장애물 없음 · 자유 도전</span>
+      </div>
+
+      <!-- 미션 설명 및 상태 미터 -->
+      <div id="status-banner" class="status-banner info" role="status" aria-live="polite">
+        <span>💡 미션: 🚀 미사일을 조종해 무지개 선을 그리며 🎯 목표점에 도착하세요!</span>
+      </div>
+
+      <section id="drawing-education-task-panel" class="drawing-education-task-panel" role="tabpanel" aria-labelledby="drawing-education-task-title" hidden>
+        <div class="efficiency-task-heading">
+          <h3 id="drawing-education-task-title" class="drawing-education-task-title" tabindex="-1">① 순서대로 그림 그리기</h3>
+          <span id="drawing-education-goal-badge" class="efficiency-goal-badge">도안 완성</span>
+        </div>
+        <p id="drawing-education-task-guide" class="efficiency-lesson"></p>
+        <div id="drawing-education-reference" class="drawing-education-reference" aria-label="제시된 그림 명령" hidden>
+          <span class="drawing-education-reference-label">📜 제시 명령</span>
+          <div id="drawing-education-source-commands" class="efficiency-source-commands" aria-label="제시된 그림 명령의 실행 순서"></div>
+        </div>
+        <div id="drawing-live-step-counter" class="drawing-live-step-counter" aria-label="명령 수 비교" hidden>
+          <div class="drawing-command-count-values">
+            <span>내 명령: <strong id="drawing-current-steps">0개</strong></span>
+            <span class="counter-divider" aria-hidden="true">/</span>
+            <span>목표 최소: <strong id="drawing-target-steps">0개</strong></span>
+            <span class="drawing-physical-step-note">참고 · 실제 이동: <strong id="drawing-physical-steps">0칸</strong></span>
+          </div>
+          <small class="drawing-command-count-note"><strong>명령 수 세기:</strong> <b>[3↗]</b> 같은 이동 명령 묶음 1개와 <b>붓 떼기</b>·<b>붓 누르기</b>도 각각 1명령이에요. 실제 이동 칸 수는 참고만 해요.</small>
+        </div>
+        <div id="drawing-submitted-routes-panel" class="drawing-submitted-routes-panel" hidden>
+          <span class="drawing-submitted-label">제출했던 명령 조합 목록:</span>
+          <div id="drawing-submitted-routes-list" class="drawing-submitted-routes-list"></div>
+        </div>
+      </section>
+      <div id="pen-state-indicator" class="pen-state-indicator pen-down" aria-live="polite" hidden>
+        <span class="pen-state-icon">✏️</span>
+        <span class="pen-state-text">현재 상태: <strong>붓 누름 (선 그리는 중)</strong></span>
+      </div>
+
+      <!-- 모눈종이 캔버스 -->
+      <div class="canvas-wrapper">
+        <canvas id="grid-canvas" tabindex="0" aria-label="좌표와 게임 요소가 표시되는 모눈종이. 방향 버튼, 키보드 또는 드래그로 조작합니다."></canvas>
+      </div>
+      <div id="prediction-wait-controls" class="controls-row prediction-wait-controls" role="group" aria-label="실행 전 예측" hidden>
+        <button id="prediction-skip-btn" class="btn btn-secondary" type="button">▶ 예측 없이 실행</button>
+        <button id="prediction-cancel-btn" class="btn btn-secondary" type="button">✖ 예측 취소 (Esc)</button>
+      </div>
+
+      <!-- 그림 그리기 전용 붓 경로 힌트 토글 및 한 칸 되돌리기/앞으로 -->
+      <div id="student-history-controls" class="student-history-controls" role="group" aria-label="그림 그리기 도구">
+        <button id="drawing-ghost-toggle" class="btn btn-secondary drawing-ghost-btn" type="button" aria-pressed="false" hidden>
+          <span class="ghost-icon">👁️</span>
+          <span class="ghost-label">붓 경로 힌트: 꺼짐</span>
+        </button>
+        <button id="student-undo-btn" class="btn btn-secondary student-history-btn" type="button" disabled>↩️ 되돌리기</button>
+        <button id="student-redo-btn" class="btn btn-secondary student-history-btn" type="button" disabled>↪️ 다시 실행</button>
+      </div>
+
+      <div id="fixed-drawing-actions" class="fixed-drawing-actions" role="group" aria-label="제시 명령 그림 그리기 제어" hidden>
+        <button id="fixed-draw-submit-btn" class="btn btn-primary fixed-draw-submit-btn" type="button">✅ 그림 완성 제출</button>
+        <button id="fixed-draw-reset-btn" class="btn btn-secondary" type="button">🧹 처음부터</button>
+      </div>
+
+      <!-- 그림 그리기 모드 전용 무지개 팔레트 컬러 피커 -->
+      <div id="brush-color-picker" class="brush-color-picker" style="display: none;" role="group" aria-label="붓 색상 선택">
+        <div class="swatches-group">
+          <span class="palette-label" aria-hidden="true">🎨 붓 색상:</span>
+          <button class="color-swatch active" type="button" data-color="rainbow" title="무지개 효과" aria-label="무지개 붓 색상 선택">🌈 무지개</button>
+          <button class="color-swatch" type="button" data-color="#f43f5e" title="진한 분홍" aria-label="분홍 붓 색상 선택">💖 분홍</button>
+          <button class="color-swatch" type="button" data-color="#38bdf8" title="파랑" aria-label="파랑 붓 색상 선택">💙 파랑</button>
+          <button class="color-swatch" type="button" data-color="#eab308" title="노랑" aria-label="노랑 붓 색상 선택">💛 노랑</button>
+          <button class="color-swatch" type="button" data-color="#22c55e" title="초록" aria-label="초록 붓 색상 선택">💚 초록</button>
+          <button class="color-swatch" type="button" data-color="#a855f7" title="보라" aria-label="보라 붓 색상 선택">💜 보라</button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- 우측: 명령어 컨트롤 패널 -->
+    <section class="glass-card control-card">
+      <div class="card-title">
+        <span id="command-panel-title">📥 [입력 & 명령어] 8방향 알고리즘 조립</span>
+        <span id="step-counter" class="brand-sub">이동 횟수: 0칸</span>
+      </div>
+
+      <!-- 창작자 전용 문제 설정 -->
+      <div id="creator-controls" style="display: none; flex-direction: column; gap: 10px; width: 100%;">
+        <div id="creator-purpose-guide" class="creator-purpose-guide" role="status">
+          <strong>🚀 미사일 문제 출제</strong>
+          <span>명령어를 미리 만들 필요가 없습니다. 학생이 풀 문제의 시작점·목표점·장애물만 배치하세요.</span>
+        </div>
+
+        <div class="creator-type-panel">
+          <p class="brand-sub" style="margin-bottom: 6px; font-weight: bold;">출제할 문제 유형 선택:</p>
+          <div class="controls-row creator-type-row">
+            <button id="create-bomb-btn" class="btn btn-secondary creator-type-btn active-type">🚀 미사일 문제 출제</button>
+            <button id="create-draw-btn" class="btn btn-secondary creator-type-btn">🖌️ 그림 문제 출제</button>
+          </div>
+        </div>
+
+        <div class="creator-grid-size-panel" style="margin-top: 4px;">
+          <p class="brand-sub" style="margin-bottom: 4px; font-weight: bold;">📐 모눈종이 크기 선택:</p>
+          <div class="controls-row grid-size-row">
+            <button class="btn btn-secondary grid-size-btn" data-size="5">5x5</button>
+            <button class="btn btn-secondary grid-size-btn active-size" data-size="7">7x7</button>
+            <button class="btn btn-secondary grid-size-btn" data-size="9">9x9</button>
+            <button class="btn btn-secondary grid-size-btn" data-size="11">11x11</button>
+          </div>
+        </div>
+
+        <div id="bomb-creator-tools" class="creator-edit-tools" style="display: flex; flex-direction: column; gap: 6px;">
+          <p class="brand-sub" style="font-weight: bold; margin-bottom: 2px;">① 배치할 것을 고른 뒤 ② 모눈종이 교차점을 누르세요.</p>
+          <div class="controls-row creator-tool-row">
+            <button id="tool-obstacle-btn" class="btn btn-secondary creator-tool-btn active-tool" data-tool="obstacle">🔴 장애물 놓기·지우기</button>
+            <button id="tool-star-btn" class="btn btn-secondary creator-tool-btn" data-tool="star">🚀 시작점 이동</button>
+            <button id="tool-goal-btn" class="btn btn-secondary creator-tool-btn" data-tool="goal">🎯 목표점 이동</button>
+          </div>
+          <span class="brand-sub" style="font-size: 11px; text-align: center; color: var(--accent-gold);">💡 공유하기 전에 학생이 목표점까지 갈 수 있는지 자동으로 검사합니다.</span>
+          <button id="creator-layout-reset-btn" class="btn btn-secondary" type="button">🧹 시작 배치로 되돌리기</button>
+        </div>
+
+        <div id="draw-creator-tools" class="creator-edit-tools" style="display: none; flex-direction: column; gap: 6px;">
+          <p class="brand-sub" style="font-weight: bold; margin-bottom: 2px;">① 붓 시작점을 정하고 ② 방향 버튼으로 정답 그림 경로를 만드세요.</p>
+          <button id="draw-start-tool-btn" class="btn btn-secondary creator-tool-btn active-tool" data-tool="star">🖌️ 붓 시작점 이동</button>
+          <span class="brand-sub" style="font-size: 11px; text-align: center; color: var(--accent-gold);">💡 시작점 이동 버튼을 누른 뒤 모눈종이 교차점을 클릭하면 붓 위치가 바뀝니다.</span>
+        </div>
+      </div>
+
+      <!-- 명령을 효율적으로 쓰기 준비 활동 -->
+      <div id="efficiency-task-panel" class="efficiency-task-panel" hidden>
+        <div class="efficiency-task-heading">
+          <strong>🔎 주어진 긴 명령</strong>
+          <span id="efficiency-goal-badge" class="efficiency-goal-badge"></span>
+        </div>
+        <p id="efficiency-lesson" class="efficiency-lesson"></p>
+        <div id="efficiency-source-commands" class="efficiency-source-commands" aria-label="주어진 긴 명령의 실행 순서"></div>
+        <div class="efficiency-stats" aria-live="polite">
+          <span>긴 명령 <strong id="efficiency-source-count">0개</strong></span>
+          <span aria-hidden="true">→</span>
+          <span>내 명령 <strong id="efficiency-answer-count">0개</strong></span>
+        </div>
+      </div>
+
+      <section id="command-block-workspace" class="command-block-workspace" aria-labelledby="command-block-workspace-title" hidden>
+        <div class="command-block-heading">
+          <div>
+            <strong id="command-block-workspace-title">🧱 나만의 명령 블록</strong>
+            <span>반복되는 명령을 A 또는 B로 만들고 메인에서 불러오세요.</span>
+          </div>
+          <span id="command-block-score" class="command-block-score">전체 코드 0개</span>
+        </div>
+        <div id="command-block-tabs" class="command-block-tabs" role="tablist" aria-label="명령 블록 편집 공간">
+          <button class="command-block-tab active" type="button" role="tab" aria-selected="true" data-command-target="main">메인 실행</button>
+          <button class="command-block-tab block-a" type="button" role="tab" aria-selected="false" data-command-target="A">명령 블록 A</button>
+          <button class="command-block-tab block-b" type="button" role="tab" aria-selected="false" data-command-target="B">명령 블록 B</button>
+        </div>
+        <div class="command-block-summary" aria-live="polite">
+          <span id="command-block-summary-a"><strong>A</strong> = 비어 있음</span>
+          <span id="command-block-summary-b"><strong>B</strong> = 비어 있음</span>
+        </div>
+        <div id="command-block-insert-controls" class="command-block-insert-controls">
+          <span>메인에 넣기:</span>
+          <button id="insert-block-a-btn" class="btn btn-secondary" type="button">A 반복 호출</button>
+          <button id="insert-block-b-btn" class="btn btn-secondary" type="button">B 반복 호출</button>
+        </div>
+        <p id="command-block-editor-guide" class="command-block-editor-guide">메인 실행 순서를 만들고 A를 반복 호출하세요.</p>
+      </section>
+
+      <!-- 🎨 그림 모드 전용 붓 누르기 / 붓 떼기 제어 바 -->
+      <div id="brush-pen-controls" class="brush-pen-controls" style="display: none;" role="group" aria-label="붓 상태 명령">
+        <span class="brush-control-label" aria-hidden="true">🖌️ 붓 상태 명령:</span>
+        <button id="pen-down-btn" class="btn btn-secondary pen-cmd-btn active" type="button" title="이동할 때 선을 그립니다 (붓 누르기)" aria-label="붓 누르기: 이후 이동에서 선을 그립니다">
+          🖌️ 붓 누르기
+        </button>
+        <button id="pen-up-btn" class="btn btn-secondary pen-cmd-btn" type="button" title="선 없이 이동만 합니다 (붓 떼기)" aria-label="붓 떼기: 이후 이동에서 선을 그리지 않습니다">
+          ✋ 붓 떼기
+        </button>
+      </div>
+
+      <!-- 8방향 방향키 패드 (입력 장치) -->
+      <div id="command-keypad" class="arrow-keypad" role="group" aria-label="8방향 이동 키패드">
+        <button class="dir-btn" type="button" data-dir="UP_LEFT" title="왼쪽 위 (↖) 입력" aria-label="왼쪽 위로 1칸 명령 추가">↖</button>
+        <button class="dir-btn" type="button" data-dir="UP" title="위 (↑) 입력" aria-label="위로 1칸 명령 추가">↑</button>
+        <button class="dir-btn" type="button" data-dir="UP_RIGHT" title="오른쪽 위 (↗) 입력" aria-label="오른쪽 위로 1칸 명령 추가">↗</button>
+        
+        <button class="dir-btn" type="button" data-dir="LEFT" title="왼쪽 (←) 입력" aria-label="왼쪽으로 1칸 명령 추가">←</button>
+        <button id="keypad-center" class="dir-btn center-btn" type="button" aria-label="붓 상태 전환: 붓 누름과 붓 떼기를 바꿉니다" title="붓 누르기 / 붓 떼기 명령 추가">
+          <span id="keypad-center-icon">🚀</span>
+          <span id="keypad-center-subtext" class="center-subtext" style="display: none;">누르기</span>
+        </button>
+        <button class="dir-btn" type="button" data-dir="RIGHT" title="오른쪽 (→) 입력" aria-label="오른쪽으로 1칸 명령 추가">→</button>
+        
+        <button class="dir-btn" type="button" data-dir="DOWN_LEFT" title="왼쪽 아래 (↙) 입력" aria-label="왼쪽 아래로 1칸 명령 추가">↙</button>
+        <button class="dir-btn" type="button" data-dir="DOWN" title="아래 (↓) 입력" aria-label="아래로 1칸 명령 추가">↓</button>
+        <button class="dir-btn" type="button" data-dir="DOWN_RIGHT" title="오른쪽 아래 (↘) 입력" aria-label="오른쪽 아래로 1칸 명령 추가">↘</button>
+      </div>
+
+      <!-- 도둑 공개 명령어 정보 패널 (모드 5 전용) -->
+      <div id="thief-plan-panel" class="thief-info-card" style="display: none;">
+        <div class="thief-title">
+          <span>🥷 복면 도둑의 차례별 이동 경로</span>
+          <span class="turn-notice-badge">⚠️ 한 차례에 1칸</span>
+        </div>
+        <p class="brand-sub" style="font-size: 11px; margin: 4px 0 8px 0; line-height: 1.4;">
+          📌 <b>한 차례의 순서</b>: <b>[1] 🥷 도둑이 1칸 먼저 이동</b> ➡️ <b>[2] 👮‍♂️ 경찰이 1칸 이동</b>합니다.<br>
+          도둑의 공개 경로 명령어를 확인하고 도둑이 탈출하기 전에 경찰을 이동시켜 체포하세요!
+        </p>
+        <p id="chase-obstacle-note" class="chase-obstacle-note" role="note" hidden></p>
+        <p id="chase-handcuff-note" class="chase-handcuff-note" role="note" hidden></p>
+        <div id="thief-steps-list" class="thief-steps-container"></div>
+      </div>
+
+      <!-- 현재 만든 명령어 실행 순서 -->
+      <div id="command-queue-section" class="command-queue-container">
+        <p class="brand-sub command-order-label">
+          <strong>📋 명령어 실행 순서</strong>
+          <span>1번부터 차례대로 실행됩니다. ⠿ 손잡이를 드래그하거나 방향키로 순서를 바꿀 수 있어요.</span>
+        </p>
+        <div id="command-queue" class="command-queue">
+          <!-- JS에서 칩 형태 추가 됨 -->
+        </div>
+      </div>
+
+      <!-- 실행 및 제어 버튼 모음 -->
+      <div id="command-action-controls" class="controls-row">
+        <button id="run-btn" class="btn btn-primary" title="입력한 명령어를 모눈종이에 연산 처리 및 출력합니다">⚙️ [처리] 실행하기</button>
+        <button id="submit-draw-btn" class="btn btn-primary" style="display: none; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-color: #34d399;">✅ [출력] 그림 완성 제출</button>
+        <button id="reset-btn" class="btn btn-secondary">🧹 처음부터</button>
+      </div>
+
+      <!-- 미사일 이동·장애물 피하기 학습 보조 -->
+      <div id="learning-aid-controls" class="learning-aid-controls" hidden>
+        <button id="debug-program-btn" class="btn btn-secondary learning-aid-btn" type="button" title="정답에서 명령 하나만 틀리게 바꾼 프로그램을 불러옵니다">🐞 틀린 명령 고치기</button>
+        <label id="predict-before-run-control" class="shortest-rule-control learning-aid-toggle" for="predict-before-run-toggle">
+          <input id="predict-before-run-toggle" type="checkbox">
+          <span class="shortest-rule-copy">
+            <strong>🔮 실행 전에 예측하기</strong>
+            <small>실행하기 전에 미사일이 멈출 칸을 먼저 골라요</small>
+          </span>
+        </label>
+      </div>
+
+      <!-- 창작자 전용 공유·활동지 출력 -->
+      <div id="creator-output-actions" style="display: none; flex-direction: column; gap: 10px; width: 100%;">
+        <div class="controls-row creator-output-row">
+          <button id="share-btn" class="btn btn-gold">🔗 문제 링크·QR 공유</button>
+          <button id="create-worksheet-btn" class="btn btn-primary creator-pdf-btn">📥 활동지 PDF로 저장</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+  </div>
+
+  <!-- 문제 링크와 QR 코드 공유 창 -->
+  <div id="share-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="share-modal-title">
+    <div class="modal-card" style="max-width: 440px; text-align: center;">
+      <button class="modal-dismiss-btn" type="button" data-close-modal="share-modal" aria-label="공유 창 닫기">×</button>
+      <div style="font-size: 40px;">📱 📷 🎉</div>
+      <h2 id="share-modal-title" tabindex="-1" style="font-size: 20px; font-weight: 700;">나만의 문제 QR & 공유 링크 완성!</h2>
+      <p class="brand-sub" style="font-size: 12px; margin-bottom: 12px;">
+        스마트폰 카메라로 QR 코드를 찍거나 아래 문제 링크를 보내세요.
+      </p>
+      <p id="share-environment-note" class="share-environment-note" hidden></p>
+
+      <!-- 선명한 QR 코드 표시 영역 -->
+      <div id="qr-code-wrapper" style="background: #ffffff; padding: 12px; border-radius: 16px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.3); margin-bottom: 12px;">
+        <img id="share-qr-img" src="" alt="공유 QR 코드" style="width: 180px; height: 180px; display: block; border-radius: 8px;">
+      </div>
+      <p id="share-qr-status" class="share-feedback" aria-live="polite"></p>
+
+      <label for="share-url-input" class="share-link-label">친구에게 보낼 문제 링크</label>
+      <input type="text" id="share-url-input" class="share-link-input" readonly style="margin-bottom: 8px;">
+      <p id="share-copy-status" class="share-feedback" aria-live="polite"></p>
+
+      <div class="controls-row modal-action-row">
+        <button id="copy-url-btn" class="btn btn-primary">📋 문제 링크 복사</button>
+        <button id="close-modal-btn" class="btn btn-secondary">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 📄 종이활동지 생성 설정 모달 -->
+  <div id="worksheet-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="worksheet-modal-title">
+    <div class="modal-card" style="max-width: 480px; text-align: left;">
+      <button class="modal-dismiss-btn" type="button" data-close-modal="worksheet-modal" aria-label="종이활동지 창 닫기">×</button>
+      <div style="font-size: 36px; text-align: center;">📄 🖨️</div>
+      <h2 id="worksheet-modal-title" tabindex="-1" style="font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 6px;">A4 규격 종이활동지 만들기</h2>
+      <p class="brand-sub" style="font-size: 12px; text-align: center; margin-bottom: 16px;">
+        원하는 문제 종류와 모눈종이 크기를 고르면 <b>A4 1장에 2문제씩</b> 알맞게 배치됩니다.
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div>
+          <label for="ws-mode-select" style="font-size: 13px; font-weight: bold; color: #38bdf8;">🎯 문제 종류:</label>
+          <select id="ws-mode-select" class="share-link-input" style="margin-top: 4px; font-size: 13px;">
+            <option value="mix">🌈 여러 활동 고루 섞기</option>
+            <option value="shortest">🎯 1. 미사일 이동</option>
+            <option value="routing">🧭 2. 장애물 피하기</option>
+            <option value="debug">🎨 3. 그림 보고 명령어 만들기</option>
+            <option value="debug_guide">📜 4. 명령어 보고 그림 그리기</option>
+            <option value="chase">👮‍♂️ 6. 도둑 잡기</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="ws-diff-select" style="font-size: 13px; font-weight: bold; color: #34d399;">📐 모눈종이 크기:</label>
+          <select id="ws-diff-select" class="share-link-input" style="margin-top: 4px; font-size: 13px;">
+            <option value="5">5x5</option>
+            <option value="7">7x7</option>
+            <option value="9">9x9</option>
+            <option value="11">11x11</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="ws-count-select" style="font-size: 13px; font-weight: bold; color: #fbbf24;">🔢 출력할 문제 수:</label>
+          <select id="ws-count-select" class="share-link-input" style="margin-top: 4px; font-size: 13px;">
+            <option value="2">2문제 (A4 1장)</option>
+            <option value="4" selected>4문제 (A4 2장)</option>
+            <option value="6">6문제 (A4 3장)</option>
+            <option value="8">8문제 (A4 4장)</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="ws-title-input" style="font-size: 13px; font-weight: bold; color: #cbd5e1;">🏷️ 활동지 제목:</label>
+          <input type="text" id="ws-title-input" class="share-link-input" style="margin-top: 4px; font-size: 13px;" value="모눈종이 코딩 놀이터 - 8방향 알고리즘 코딩 활동지">
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px; background: rgba(251, 191, 36, 0.1); padding: 8px 12px; border-radius: 6px; border: 1px dashed rgba(251, 191, 36, 0.4);">
+          <input type="checkbox" id="ws-include-answer-key" style="width: 18px; height: 18px; cursor: pointer;" checked>
+          <label for="ws-include-answer-key" style="font-size: 13px; font-weight: bold; color: #fbbf24; cursor: pointer;">🔑 선생님용 정답 및 모범 해설지 함께 출력하기</label>
+        </div>
+      </div>
+
+      <div class="controls-row modal-action-row" style="margin-top: 14px;">
+        <button id="ws-generate-btn" class="btn btn-primary worksheet-generate-btn">📥 PDF로 저장하거나 인쇄</button>
+        <button id="ws-close-btn" class="btn btn-secondary">닫기</button>
+      </div>
+      <p class="brand-sub" style="font-size: 11px; text-align: center; margin-top: 10px; color: #34d399;">
+        💡 <b>PDF 파일 저장 팁</b>: 열리는 인쇄 창에서 <b>[프린터 대상을 'PDF로 저장']</b>으로 선택하면 바로 A4 PDF 파일이 생성됩니다!
+      </p>
+    </div>
+  </div>
+
+  <!-- 성공/실패 결과 팝업 모달 -->
+  <div id="result-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="result-title">
+    <div id="result-card" class="modal-card result-modal-card">
+      <button class="modal-dismiss-btn" type="button" data-close-modal="result-modal" aria-label="결과 창 닫기">×</button>
+      <div id="result-icon" class="result-icon">🎉</div>
+      <h2 id="result-title" class="result-title" tabindex="-1">미션 결과</h2>
+      <p id="result-desc" class="result-desc">결과 내용 설명</p>
+      <div id="result-badge" class="result-badge">🏆 최단 경로로 목표점 도착</div>
+      
+      <div class="controls-row modal-action-row" style="margin-top: 8px;">
+        <button id="result-primary-btn" class="btn btn-primary">🔄 다시 시도하기</button>
+        <button id="result-secondary-btn" class="btn btn-secondary" hidden>새 명령 조합 더 만들기</button>
+        <button id="result-close-btn" class="btn btn-secondary">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    (() => {
+      if (window.location.protocol === 'file:') {
+        document.body.dataset.view = 'file-help';
+        document.getElementById('mode-selection-screen').hidden = true;
+        document.getElementById('play-screen').hidden = true;
+        document.getElementById('file-launch-screen').hidden = false;
+        document.getElementById('worksheet-open-btn').hidden = true;
+        document.getElementById('mute-btn').hidden = true;
+        return;
+      }
+
+      import('./app.js');
+    })();
+  </script>
+</body>
+</html>
