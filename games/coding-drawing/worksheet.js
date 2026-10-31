@@ -196,6 +196,38 @@ export const WorksheetGenerator = {
   },
 
   /**
+   * 학생 답 칸 수. 한 칸에 한 명령(한 칸 이동)을 적어도 모범 답안이 들어가도록
+   * 문제마다 계산하고, 6칸 단위(한 줄)로 맞춘다. 카드 높이를 넘지 않게 24칸까지만 둔다.
+   */
+  getAnswerSlotCount(problem) {
+    const gridSize = problem.gridSize || 7;
+    let needed = 12;
+    if (problem.modeType === 'chase' && problem.thiefCommands) {
+      const analysis = CommandEngine.analyzeChaseCapturePlans(
+        problem.starPos,
+        problem.thiefPos,
+        problem.thiefCommands,
+        gridSize,
+        problem.obstacles || [],
+        problem.handcuffPos || null
+      );
+      needed = Math.max(needed, analysis?.earliestTurn || 0);
+    } else if (problem.starPos && problem.goalPos) {
+      const analysis = CommandEngine.analyzeShortestPaths(
+        problem.starPos,
+        problem.goalPos,
+        gridSize,
+        problem.obstacles || []
+      );
+      needed = Math.max(needed, analysis?.distance || 0);
+    } else if (problem.targetLines) {
+      // 그림은 명령을 →3처럼 묶어 쓰므로 칸 이동 수보다 적게 든다. 세 줄을 준다.
+      needed = 18;
+    }
+    return Math.min(24, Math.ceil(needed / 6) * 6);
+  },
+
+  /**
    * 개별 문제 카드 HTML 및 오프스크린 High-DPI 캔버스 PNG 생성
    */
   async createProblemCard(problem, problemNum) {
@@ -254,10 +286,51 @@ export const WorksheetGenerator = {
         for (let i = 0; i < c.distance; i++) expanded.push(symbol);
       });
       const stepItems = expanded.map((sym, idx) => `${idx + 1}차례: [1${sym}]`).join(' ➡️ ');
-      stepTextHTML = `<div class="ws-step-box">🥷 <b>공개된 복면 도둑 차례 경로</b>: ${stepItems}</div>`;
+      // 화면에서는 실행하며 익히는 규칙이라 종이 활동지에는 직접 적어 준다.
+      const chaseRules = [
+        '한 차례마다 도둑이 먼저 1칸, 그다음 경찰이 1칸 움직여요.',
+        '경찰과 도둑이 같은 칸에 있어야 잡아요. 서로 자리만 바꾸면 못 잡아요.',
+        '도둑이 경로를 다 움직이면 달아나요.'
+      ];
+      if (problem.handcuffPos) chaseRules.push('🔗 수갑 칸을 먼저 지나야 도둑을 잡을 수 있어요.');
+      stepTextHTML = `
+        <div class="ws-step-box">🥷 <b>공개된 복면 도둑 차례 경로</b>: ${stepItems}</div>
+        <div class="ws-step-box"><b>규칙</b>: ${chaseRules.map((rule, idx) => `${idx + 1}) ${rule}`).join(' ')}</div>
+      `;
     }
 
     const directionGuide = '↖(왼쪽 위) ↑(위) ↗(오른쪽 위) ←(왼쪽) →(오른쪽) ↙(왼쪽 아래) ↓(아래) ↘(오른쪽 아래)';
+    const answerSlotCount = this.getAnswerSlotCount(problem);
+    const answerAreaHTML = problem.modeType === 'debug_guide'
+      ? `
+        <div class="ws-answer-area">
+          <div class="ws-answer-title">
+            <span>✏️ [출력] 왼쪽 모눈종이에 주어진 명령대로 선을 그려 그림을 완성하세요.</span>
+          </div>
+          <div class="ws-arrow-legend-bar">
+            <span>💡 방향 기호 안내: ${directionGuide}</span>
+          </div>
+          <p class="ws-guide">완성한 그림의 이름: ______________________</p>
+        </div>
+      `
+      : `
+        <div class="ws-answer-area">
+          <div class="ws-answer-title">
+            <span>✏️ [입력] 8방향 순차 알고리즘 명령어 작성란 (총 ${answerSlotCount}칸):</span>
+          </div>
+          <div class="ws-arrow-legend-bar">
+            <span>💡 방향 기호 안내: ${directionGuide}${problem.modeType === 'chase' ? '' : ' · 같은 방향은 한 칸에 →3처럼 묶어 써도 돼요.'}</span>
+          </div>
+          <div class="ws-answer-grid${answerSlotCount > 12 ? ' ws-answer-grid--dense' : ''}">
+            ${Array(answerSlotCount).fill(0).map((_, i) => `
+              <div class="ws-ans-box">
+                <span class="ws-box-num">${i + 1}${problem.modeType === 'chase' ? '차례' : '단계'}</span>
+                <div class="ws-box-input"></div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
 
     cardEl.innerHTML = `
       <div class="ws-card-left">
@@ -270,23 +343,7 @@ export const WorksheetGenerator = {
         </div>
         <p class="ws-guide">${problem.guide || '목적지에 도달하는 코드를 완성하세요!'}</p>
         ${stepTextHTML}
-        
-        <div class="ws-answer-area">
-          <div class="ws-answer-title">
-            <span>✏️ [입력] 8방향 순차 알고리즘 명령어 작성란 (총 12단계):</span>
-          </div>
-          <div class="ws-arrow-legend-bar">
-            <span>💡 방향 기호 안내: ${directionGuide}</span>
-          </div>
-          <div class="ws-answer-grid">
-            ${Array(12).fill(0).map((_, i) => `
-              <div class="ws-ans-box">
-                <span class="ws-box-num">${i + 1}단계</span>
-                <div class="ws-box-input"></div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
+        ${answerAreaHTML}
 
         <div class="ws-check-area">
           <span>선생님 확인: ⭐ ⭐ ⭐ ⭐ ⭐</span>
@@ -350,7 +407,7 @@ export const WorksheetGenerator = {
       }).join(' ➡️ ');
       solutionHTML = optCmds.length > 0
         ? `
-          <div><b>장애물을 피하는 최단 모범 답안:</b> ${steps}</div>
+          <div><b>${(problem.obstacles || []).length > 0 ? '장애물을 피하는 최단 모범 답안' : '최단 모범 답안'}:</b> ${steps}</div>
           <div><b>최단 이동:</b> ${analysis.distance}칸 · <b>가능한 최단 명령열:</b> ${analysis.pathCount.toLocaleString('ko-KR')}가지</div>
           <div>※ 위 답은 여러 최단 답안 중 한 예시이며, 같은 길이의 다른 안전 경로도 정답입니다.</div>
         `

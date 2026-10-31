@@ -4540,6 +4540,15 @@ button, select, input, .dir-btn, .learning-mode-btn, .activity-tab-btn {
     background: #ffffff;
   }
 
+  /* 답 칸이 세 줄 이상이면 카드(118mm) 안에 들어가도록 칸 높이를 줄인다. */
+  .ws-answer-grid--dense {
+    gap: 4px;
+  }
+
+  .ws-answer-grid--dense .ws-ans-box {
+    height: 32px;
+  }
+
   .ws-box-num {
     position: absolute;
     top: 2px;

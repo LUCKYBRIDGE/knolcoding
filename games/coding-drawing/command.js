@@ -910,21 +910,6 @@ export const CommandEngine = {
           componentSet.has(pointKey(line.fromX, line.fromY)) &&
           componentSet.has(pointKey(line.toX, line.toY))
         )).length;
-        const componentDistances = new Map();
-        for (const source of componentVertices) {
-          const sourceDistances = new Map([[source, 0]]);
-          const queue = [source];
-          for (let index = 0; index < queue.length; index++) {
-            const current = queue[index];
-            const nextDistance = sourceDistances.get(current) + 1;
-            for (const next of adjacency.get(current) || []) {
-              if (!componentSet.has(next) || sourceDistances.has(next)) continue;
-              sourceDistances.set(next, nextDistance);
-              queue.push(next);
-            }
-          }
-          componentDistances.set(source, sourceDistances);
-        }
         const oddVertices = componentVertices.filter(
           vertex => adjacency.get(vertex).size % 2 === 1
         );
@@ -946,9 +931,11 @@ export const CommandEngine = {
             let best = Number.POSITIVE_INFINITY;
             for (let partner = first + 1; partner < terminals.length; partner++) {
               if ((withoutFirst & (1 << partner)) === 0) continue;
+              // 홀수 꼭짓점 사이는 붓을 떼고 8방향으로 곧장 이동한다.
+              // 선을 되짚는 거리는 이 공중 이동 거리보다 짧을 수 없다.
               best = Math.min(
                 best,
-                componentDistances.get(terminals[first]).get(terminals[partner]) +
+                airDistance(terminals[first], terminals[partner]) +
                   solve(withoutFirst & ~(1 << partner))
               );
             }
@@ -1013,21 +1000,14 @@ export const CommandEngine = {
       return rememberDistance(best);
     }
 
-    const distances = new Map();
-    for (const source of vertices) {
-      const sourceDistances = new Map([[source, 0]]);
-      const queue = [source];
-      for (let index = 0; index < queue.length; index++) {
-        const current = queue[index];
-        const nextDistance = sourceDistances.get(current) + 1;
-        for (const next of adjacency.get(current) || []) {
-          if (sourceDistances.has(next)) continue;
-          sourceDistances.set(next, nextDistance);
-          queue.push(next);
-        }
-      }
-      distances.set(source, sourceDistances);
-    }
+    // 연결된 큰 그림: 시작점에서 출발해 모든 선을 한 번씩 긋고, 홀수 꼭짓점은
+    // 붓을 떼고 8방향으로 이동해 짝짓는다(작은 그림의 완전탐색과 같은 기준).
+    // 선을 되짚는 거리는 8방향 공중 이동 거리보다 짧을 수 없으므로 공중 이동만 고려한다.
+    const airDistanceBetween = (fromKey, toKey) => {
+      const [fromX, fromY] = fromKey.split(',').map(Number);
+      const [toX, toY] = toKey.split(',').map(Number);
+      return Math.max(Math.abs(fromX - toX), Math.abs(fromY - toY));
+    };
 
     const oddVertices = vertices.filter(
       vertex => adjacency.get(vertex).size % 2 === 1
@@ -1057,9 +1037,7 @@ export const CommandEngine = {
         for (let partner = first + 1; partner < terminals.length; partner++) {
           const partnerBit = 1n << BigInt(partner);
           if ((withoutFirst & partnerBit) === 0n) continue;
-          const distance = distances
-            .get(terminals[first])
-            .get(terminals[partner]);
+          const distance = airDistanceBetween(terminals[first], terminals[partner]);
           const remaining = withoutFirst & ~partnerBit;
           best = Math.min(best, distance + solve(remaining));
         }

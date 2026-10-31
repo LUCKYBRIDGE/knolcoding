@@ -1074,6 +1074,14 @@ export function getRequiredProblemBankModes(mode, challengeType = 'stage') {
     // 선택한 현재 활동만 준비하면 1단계 후보가 부족해지는 오류가 발생한다.
     return ['debug', 'debug_guide'];
   }
+  if (
+    challengeType === 'education' &&
+    ['shortest', 'routing', 'efficiency'].includes(mode)
+  ) {
+    // 미사일 교육은 단계마다 효율(③), 최단(①·②·④), 장애물(④·⑤) 문제은행을
+    // 섞어 쓴다. 현재 활동만 준비하면 브라우저에서 단계별 문제가 줄어든다.
+    return ['shortest', 'routing', 'efficiency'];
+  }
   return [mode];
 }
 
@@ -1739,6 +1747,9 @@ export class App {
 
       this.closeModal('worksheet-modal');
 
+      // 활동지는 화면에서 아직 열지 않은 활동의 문제도 뽑으므로, 검증된
+      // 문제은행을 모두 준비한 뒤 만든다. 준비 전 PRESET_LEVELS에는 옛 문제만 있다.
+      Object.keys(PRESET_LEVELS).forEach(bankMode => ensurePresetProblemBankMode(bankMode));
       WorksheetGenerator.generateAndPrint({ mode, diff, count, title, includeAnswerKey }, PRESET_LEVELS);
     });
 

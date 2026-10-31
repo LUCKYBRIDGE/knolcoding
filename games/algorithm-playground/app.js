@@ -118,8 +118,8 @@ function BlockPalette({ blocks, onDragStart, onDrop, onQuickAdd, iconPaths, onTi
               html`<${Block}
                 key=${block.id + '-' + idx}
                 block=${block}
-                onDragStart=${(e) => onDragStart(e, block.id)}
-                onQuickAction=${() => onQuickAdd(block.id)}
+                onDragStart=${(e) => onDragStart(e, block.id, idx)}
+                onQuickAction=${() => onQuickAdd(block.id, idx)}
                 quickActionLabel="＋"
                 iconPath=${iconPaths ? iconPaths[block.id] : null}
                 onTimeChange=${block.id === 'waitBoil' && onTimeChange ? () => onTimeChange(idx) : null}
@@ -138,8 +138,9 @@ function ExecutionSequence({ blocks, onDragStart, onDrop, onExecute, onReset, on
 
   const handleDragOver = (e) => {
     e.preventDefault();
-    const blockId = e.dataTransfer.getData('blockId');
-    if (!blockId) return;
+    // dragover 중에는 브라우저가 getData() 값을 숨기므로 데이터 종류만 확인한다.
+    const types = Array.from(e.dataTransfer.types || []).map((type) => type.toLowerCase());
+    if (!types.includes('blockid')) return;
 
     const dropZone = e.currentTarget;
     const draggableElements = Array.from(dropZone.querySelectorAll('[draggable="true"]'));
@@ -193,7 +194,7 @@ function ExecutionSequence({ blocks, onDragStart, onDrop, onExecute, onReset, on
       }
     }
 
-    onDrop(blockId, targetIndex);
+    onDrop(blockId, targetIndex, e);
     setDragOverIndex(null);
   };
 
@@ -469,6 +470,7 @@ const getResultImage = (resultType) => {
     'late_soup': './images-game-pixel-final/ramen/late-soup-ramen.png',
     'soup_after_fireoff': './images-game-pixel-final/ramen/late-soup-ramen.png',
     'noodle_after_fireoff': './images-game-pixel-final/ramen/hotsouprawnoodlebowl.png',
+    'noodle_before_boil': './images-game-pixel-final/ramen/soft-ramen.png',
     'fire_not_off': './images-game-pixel-final/ramen/cookingpot.png',
     'perfect': './images-game-pixel-final/ramen/finishedramen.png',
   };
@@ -494,6 +496,7 @@ const getRamenCookingStats = (sequence) => {
     dryNoodleBurned: false,
     drySoupBurned: false,
     noodleAddedAfterFireOff: false,
+    noodleBeforeBoil: false,
     soupAddedAfterFireOff: false,
     soupAddedAfterNoodlesCooked: false,
     cookedSeconds: 0,
@@ -586,6 +589,9 @@ const getRamenCookingStats = (sequence) => {
         stats.fireBeforeWater = true;
         markDryBurned();
       }
+      // 불을 끈 뒤 넣은 재료도 다시 불을 켜면 이어서 익는다.
+      stats.noodleAddedAfterFireOff = false;
+      stats.soupAddedAfterFireOff = false;
       stats.fireOn = true;
       return;
     }
@@ -594,6 +600,9 @@ const getRamenCookingStats = (sequence) => {
       stats.hasNoodle = true;
       if (stats.hasFireOff && !stats.fireOn) {
         stats.noodleAddedAfterFireOff = true;
+      } else if (!stats.waterAvailable || stats.heatedWaterSeconds < RAMEN_BOIL_SECONDS) {
+        // 물을 받기 전이거나 물이 아직 끓지 않았을 때 면을 넣었다.
+        stats.noodleBeforeBoil = true;
       }
       if (stats.fireOn && !stats.waterAvailable) {
         stats.dryNoodleBurned = true;
@@ -770,7 +779,9 @@ const evaluateRamen = (sequence) => {
       return {
         success: false,
         message: '🔥 물이 다 날아가 면이 탔어요!',
-        description: '불을 켠 채 10분 이상 끓여서 물이 모두 날아갔어요. 스프는 없지만 면이 냄비에 눌어붙어 타버렸어요!',
+        description: stats.hasSoup
+          ? '불을 켠 채 10분 이상 끓여서 물이 모두 날아갔어요. 면이 냄비에 눌어붙어 타버렸어요!'
+          : '불을 켠 채 10분 이상 끓여서 물이 모두 날아갔어요. 스프는 없지만 면이 냄비에 눌어붙어 타버렸어요!',
         emoji: '💥',
         resultType: 'evaporated_burned_noodle'
       };
@@ -866,6 +877,27 @@ const evaluateRamen = (sequence) => {
       };
     }
 
+    // 빈 냄비가 먼저 달궈진 뒤 물과 재료 일부를 넣은 경우
+    if (stats.hasWater && stats.hasNoodle && !stats.hasSoup) {
+      return {
+        success: false,
+        message: '🔥 탄 냄비 맛이 나는 면 물이에요!',
+        description: '물을 넣기 전에 빈 냄비를 먼저 달궈서 냄비가 탔어요. 스프도 넣지 않아 맛있는 라면이 되지 않았어요!',
+        emoji: '💥',
+        resultType: 'burnt_taste_noodle'
+      };
+    }
+
+    if (stats.hasWater && stats.hasSoup && !stats.hasNoodle) {
+      return {
+        success: false,
+        message: '🔥 탄 냄비 맛이 나는 스프물이에요!',
+        description: '물을 넣기 전에 빈 냄비를 먼저 달궈서 냄비가 탔어요. 면도 넣지 않았어요!',
+        emoji: '💥',
+        resultType: 'burnt_taste_soup'
+      };
+    }
+
     if (stats.dryNoodleBurned) {
       return {
         success: false,
@@ -889,7 +921,9 @@ const evaluateRamen = (sequence) => {
     return {
       success: false,
       message: '🔥 빈 냄비가 탔어요!',
-      description: '물을 넣기 전에 불을 켜서 빈 냄비가 타버렸어요!',
+      description: stats.hasWater
+        ? '물을 넣기 전에 불을 켜서 빈 냄비가 먼저 타버렸어요. 물은 꼭 불을 켜기 전에 받아야 해요!'
+        : '물을 넣기 전에 불을 켜서 빈 냄비가 타버렸어요!',
       emoji: '💥',
       resultType: 'burned_empty_pot'
     };
@@ -1039,7 +1073,9 @@ const evaluateRamen = (sequence) => {
     return {
       success: false,
       message: '😐 스프가 없어요!',
-      description: '면은 익었지만 스프를 넣지 않아서 라면 맛이 나지 않아요!',
+      description: stats.cookedSeconds >= 120
+        ? '면은 익었지만 스프를 넣지 않아서 라면 맛이 나지 않아요!'
+        : '면도 덜 익었고 스프도 넣지 않아서 라면 맛이 나지 않아요!',
       emoji: '🙁',
       resultType: 'no_soup'
     };
@@ -1069,7 +1105,9 @@ const evaluateRamen = (sequence) => {
     return {
       success: false,
       message: '😵 국물이 많이 졸아 짠 라면이에요!',
-      description: '불을 켠 채 5분 넘게 끓여서 국물이 많이 줄었어요. 면도 많이 불고 국물이 너무 진해졌어요!',
+      description: stats.cookedSeconds > 240
+        ? '불을 켠 채 5분 넘게 끓여서 국물이 많이 줄었어요. 면도 많이 불고 국물이 너무 진해졌어요!'
+        : '불을 켠 채 5분 넘게 끓여서 국물이 많이 줄었어요. 국물이 너무 진하고 짜졌어요!',
       emoji: '😵',
       resultType: 'reduced_water_ramen'
     };
@@ -1078,6 +1116,16 @@ const evaluateRamen = (sequence) => {
   const quality = getRamenCookQuality(stats.cookedSeconds);
   if (!quality.success) {
     return quality;
+  }
+
+  if (stats.noodleBeforeBoil) {
+    return {
+      success: false,
+      message: '🍜 면을 너무 일찍 넣었어요!',
+      description: '물이 끓기 전에 면을 넣어서 미지근한 물에서 면이 먼저 불어 버렸어요. 면은 물이 끓은 다음에 넣어야 해요!',
+      emoji: '😖',
+      resultType: 'noodle_before_boil'
+    };
   }
 
   if (stats.soupAddedAfterFireOff) {
@@ -1344,7 +1392,11 @@ function RamenResultModal({ isOpen, onClose, result, animationFrames, isDebugMod
         ${result.success
           ? html`
               <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6 mb-6 text-center">
-                <p className="text-green-700 text-lg font-semibold">🎊 절차를 완벽하게 이해했어요! 👍</p>
+                <p className="text-green-700 text-lg font-semibold">
+                  ${result.resultType === 'perfect'
+                    ? '🎊 절차를 완벽하게 이해했어요! 👍'
+                    : '👍 먹을 수 있는 라면이에요! 기다리는 시간을 3분에 맞춰 완벽한 라면에 도전해 보세요.'}
+                </p>
               </div>
             `
           : html`
@@ -1484,13 +1536,14 @@ const generateRamenBuggySequence = () => {
       { ...RAMEN_BLOCKS.waitBoil, seconds: 180, text: '3분 기다리기' },
       { ...RAMEN_BLOCKS.fireOff },
     ],
-    // 패턴 3: 면을 너무 오래 끓임
+    // 패턴 3: 면을 너무 오래 끓임 (국물이 졸아 버림)
     [
       { ...RAMEN_BLOCKS.water },
       { ...RAMEN_BLOCKS.fire },
+      { ...RAMEN_BLOCKS.waitBoil, seconds: 30, text: '30초 기다리기' },
       { ...RAMEN_BLOCKS.noodle },
       { ...RAMEN_BLOCKS.soup },
-      { ...RAMEN_BLOCKS.waitBoil, seconds: 240, text: '4분 기다리기' },
+      { ...RAMEN_BLOCKS.waitBoil, seconds: 300, text: '5분 기다리기' },
       { ...RAMEN_BLOCKS.fireOff },
     ],
     // 패턴 4: 불을 너무 일찍 끔
@@ -1507,6 +1560,7 @@ const generateRamenBuggySequence = () => {
     [
       { ...RAMEN_BLOCKS.water },
       { ...RAMEN_BLOCKS.fire },
+      { ...RAMEN_BLOCKS.waitBoil, seconds: 30, text: '30초 기다리기' },
       { ...RAMEN_BLOCKS.noodle },
       { ...RAMEN_BLOCKS.soup },
       { ...RAMEN_BLOCKS.waitBoil, seconds: 60, text: '1분 기다리기' },
@@ -1564,9 +1618,11 @@ function RamenGame({ onBack }) {
     return () => clearInterval(timer);
   }, [animationFrames]);
 
-  const handlePaletteDragStart = (e, blockId) => {
+  const handlePaletteDragStart = (e, blockId, paletteIndex) => {
     e.dataTransfer.setData('blockId', blockId);
     e.dataTransfer.setData('source', 'palette');
+    // 같은 종류의 블록(예: 기다리기 2개)을 구분하기 위해 위치도 함께 넘긴다.
+    e.dataTransfer.setData('index', String(paletteIndex));
   };
 
   const handleSequenceDragStart = (e, blockId, index) => {
@@ -1588,26 +1644,22 @@ function RamenGame({ onBack }) {
     }
   };
 
-  const handleSequenceDrop = (blockId, targetIndex) => {
-    const source = event.dataTransfer.getData('source');
+  const handleSequenceDrop = (blockId, targetIndex, dropEvent) => {
+    const source = dropEvent.dataTransfer.getData('source');
+    const sourceIndex = parseInt(dropEvent.dataTransfer.getData('index'), 10);
 
     if (source === 'palette') {
-      const block = palette.find((b) => b.id === blockId);
-      if (!block) return;
+      const block = palette[sourceIndex];
+      if (!block || block.id !== blockId) return;
 
-      setPalette((prev) => {
-        const index = prev.findIndex((b) => b.id === blockId);
-        if (index === -1) return prev;
-        return [...prev.slice(0, index), ...prev.slice(index + 1)];
-      });
+      setPalette((prev) => prev.filter((_, i) => i !== sourceIndex));
       setSequence((prev) => {
         const newSeq = [...prev];
         newSeq.splice(targetIndex, 0, block);
         return newSeq;
       });
     } else if (source === 'sequence') {
-      const sourceIndex = parseInt(event.dataTransfer.getData('index'));
-      if (sourceIndex === targetIndex) return;
+      if (Number.isNaN(sourceIndex) || sourceIndex === targetIndex) return;
 
       setSequence((prev) => {
         const newSeq = [...prev];
@@ -1619,14 +1671,10 @@ function RamenGame({ onBack }) {
     }
   };
 
-  const handleQuickAdd = (blockId) => {
-    const block = palette.find((b) => b.id === blockId);
-    if (!block) return;
-    setPalette((prev) => {
-      const index = prev.findIndex((b) => b.id === blockId);
-      if (index === -1) return prev;
-      return [...prev.slice(0, index), ...prev.slice(index + 1)];
-    });
+  const handleQuickAdd = (blockId, paletteIndex) => {
+    const block = palette[paletteIndex];
+    if (!block || block.id !== blockId) return;
+    setPalette((prev) => prev.filter((_, i) => i !== paletteIndex));
     setSequence((prev) => [...prev, block]);
   };
 
@@ -2081,9 +2129,7 @@ function CharacterDisplay({ sequence, isAnimating, character }) {
 }
 
 function RainyDayResultModal({ isOpen, onClose, result, frameImages, isDebugMode, character }) {
-  if (!isOpen || !result) return null;
-  const bgColor = result.status === 'success' ? 'bg-green-100 border-green-500' : 'bg-red-100 border-red-500';
-  const textColor = result.status === 'success' ? 'text-green-800' : 'text-red-800';
+  // 훅은 조기 return보다 먼저 호출해야 렌더마다 순서가 같다.
   const timeline = frameImages && frameImages.length ? frameImages : [getImageInfo([], character)];
   const [frameIndex, setFrameIndex] = useState(0);
 
@@ -2102,6 +2148,9 @@ function RainyDayResultModal({ isOpen, onClose, result, frameImages, isDebugMode
     return () => clearInterval(timer);
   }, [isOpen, timeline]);
 
+  if (!isOpen || !result) return null;
+  const bgColor = result.status === 'success' ? 'bg-green-100 border-green-500' : 'bg-red-100 border-red-500';
+  const textColor = result.status === 'success' ? 'text-green-800' : 'text-red-800';
   const currentFrame = timeline[frameIndex] || timeline[0];
 
   return html`
@@ -2115,14 +2164,14 @@ function RainyDayResultModal({ isOpen, onClose, result, frameImages, isDebugMode
           ? html`
               <div className="mb-5">
                 <p className="text-sm font-semibold text-gray-600 mb-2">입은 순서</p>
-                <div className="grid grid-cols-5 gap-1.5 max-h-40 overflow-y-auto">
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 max-h-40 overflow-y-auto">
                   ${timeline.map(
                     (frame, idx) => html`
-                      <div className="bg-gray-50 rounded-lg p-2 border border-gray-200 flex flex-col items-center text-center text-[10px] text-gray-600 w-[92px]">
+                      <div key=${idx} className="min-w-0 bg-gray-50 rounded-lg p-2 border border-gray-200 flex flex-col items-center text-center text-[10px] text-gray-600">
                         <div className="w-full h-12 mb-1 flex items-center justify-center">
                           <img src=${frame.imageUrl} alt=${frame.altText} className="max-h-full object-contain" />
                         </div>
-                        <span className="font-semibold text-gray-700 text-[11px]">STEP ${idx}</span>
+                        <span className="font-semibold text-gray-700 text-[11px]">${idx === 0 ? '처음' : `${idx}단계`}</span>
                         <span>${frame.caption}</span>
                       </div>
                     `,
@@ -2260,12 +2309,12 @@ const generateRainyDayBuggySequence = () => {
       { ...RAINY_DAY_BLOCKS.bag },
       { ...RAINY_DAY_BLOCKS.raincoat },
     ],
-    // 패턴 2: backpack 먼저 메고 raincoat 나중에
+    // 패턴 2: 비옷을 먼저 입고 가방을 나중에 멤 (가방이 비옷 밖에 있어 젖음)
     [
       { ...RAINY_DAY_BLOCKS.socks },
-      { ...RAINY_DAY_BLOCKS.bag },
       { ...RAINY_DAY_BLOCKS.shoes },
       { ...RAINY_DAY_BLOCKS.raincoat },
+      { ...RAINY_DAY_BLOCKS.bag },
     ],
     // 패턴 3: socks 안 신음
     [
@@ -2332,9 +2381,11 @@ function RainyDayGame({ onBack }) {
     return () => clearInterval(timer);
   }, [animationFrames]);
 
-  const handlePaletteDragStart = (e, blockId) => {
+  const handlePaletteDragStart = (e, blockId, paletteIndex) => {
     e.dataTransfer.setData('blockId', blockId);
     e.dataTransfer.setData('source', 'palette');
+    // 같은 종류의 블록(예: 기다리기 2개)을 구분하기 위해 위치도 함께 넘긴다.
+    e.dataTransfer.setData('index', String(paletteIndex));
   };
 
   const handleSequenceDragStart = (e, blockId, index) => {
@@ -2356,26 +2407,22 @@ function RainyDayGame({ onBack }) {
     }
   };
 
-  const handleSequenceDrop = (blockId, targetIndex) => {
-    const source = event.dataTransfer.getData('source');
+  const handleSequenceDrop = (blockId, targetIndex, dropEvent) => {
+    const source = dropEvent.dataTransfer.getData('source');
+    const sourceIndex = parseInt(dropEvent.dataTransfer.getData('index'), 10);
 
     if (source === 'palette') {
-      const block = palette.find((b) => b.id === blockId);
-      if (!block) return;
+      const block = palette[sourceIndex];
+      if (!block || block.id !== blockId) return;
 
-      setPalette((prev) => {
-        const index = prev.findIndex((b) => b.id === blockId);
-        if (index === -1) return prev;
-        return [...prev.slice(0, index), ...prev.slice(index + 1)];
-      });
+      setPalette((prev) => prev.filter((_, i) => i !== sourceIndex));
       setSequence((prev) => {
         const newSeq = [...prev];
         newSeq.splice(targetIndex, 0, block);
         return newSeq;
       });
     } else if (source === 'sequence') {
-      const sourceIndex = parseInt(event.dataTransfer.getData('index'));
-      if (sourceIndex === targetIndex) return;
+      if (Number.isNaN(sourceIndex) || sourceIndex === targetIndex) return;
 
       setSequence((prev) => {
         const newSeq = [...prev];
@@ -2387,14 +2434,10 @@ function RainyDayGame({ onBack }) {
     }
   };
 
-  const handleQuickAdd = (blockId) => {
-    const block = palette.find((b) => b.id === blockId);
-    if (!block) return;
-    setPalette((prev) => {
-      const index = prev.findIndex((b) => b.id === blockId);
-      if (index === -1) return prev;
-      return [...prev.slice(0, index), ...prev.slice(index + 1)];
-    });
+  const handleQuickAdd = (blockId, paletteIndex) => {
+    const block = palette[paletteIndex];
+    if (!block || block.id !== blockId) return;
+    setPalette((prev) => prev.filter((_, i) => i !== paletteIndex));
     setSequence((prev) => [...prev, block]);
   };
 
@@ -2780,7 +2823,7 @@ function MainMenu({ onSelectGame }) {
 
         <div className="text-center mt-8 sm:mt-12">
           <p className="text-xs sm:text-sm text-gray-500">
-            made by 핑키네
+            © 2026 놀퀴즈
           </p>
         </div>
       </div>
