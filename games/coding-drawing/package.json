@@ -1,0 +1,25 @@
+{
+  "name": "coding-drawing",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@10.9.2",
+  "engines": {
+    "node": ">=22 <23",
+    "npm": ">=10 <11"
+  },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5173",
+    "start:local": "node scripts/start-local.mjs",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 4173",
+    "test": "node --test tests/*.test.mjs",
+    "postinstall": "node scripts/write-platform-stamp.mjs",
+    "check:env": "node scripts/check-environment.mjs",
+    "check:portable": "node scripts/check-portability.mjs",
+    "check": "npm run check:env && npm run check:portable && npm test && npm run build"
+  },
+  "devDependencies": {
+    "vite": "6.4.3"
+  }
+}
