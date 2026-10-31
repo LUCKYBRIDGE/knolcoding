@@ -248,6 +248,130 @@ export const CommandEngine = {
   },
 
   /**
+   * 같은 문제를 '최단 이동'과 '최소 명령' 두 기준으로 푼 예시를 나란히 계산합니다.
+   * 두 기준은 판정에서는 서로 독립이며, 이 값은 결과창·정답지에서 비교를 보여 주는 데만 씁니다.
+   * commandsOnShortestRoute는 최단 경로들 가운데 명령 묶음이 가장 적은 경우의 수이고,
+   * 최단 경로가 너무 많아 다 셀 수 없으면 null입니다.
+   */
+  compareRouteRules(start, goal, gridSize = 7, obstacles = []) {
+    const minimum = this.analyzeMinimumCommands(start, goal, gridSize, obstacles);
+    if (!Number.isFinite(minimum.commandCount)) return null;
+    const shortest = this.enumerateShortestPaths(start, goal, gridSize, obstacles, 5000);
+    let shortestRouteCommands = null;
+    if (shortest.isComplete && shortest.paths.length > 0) {
+      for (const path of shortest.paths) {
+        const commands = this.compressStepList(path);
+        if (!shortestRouteCommands || commands.length < shortestRouteCommands.length) {
+          shortestRouteCommands = commands;
+        }
+      }
+    }
+    const fallbackRoute = shortestRouteCommands || this.findShortestPath(start, goal, gridSize, obstacles);
+    return {
+      shortestDistance: this.expandToStepList(fallbackRoute).length,
+      shortestRouteCommands: fallbackRoute,
+      commandsOnShortestRoute: shortestRouteCommands ? shortestRouteCommands.length : null,
+      minimumCommandCount: minimum.commandCount,
+      minimumCommandRoute: minimum.commands,
+      minimumCommandRouteDistance: this.expandToStepList(minimum.commands).length
+    };
+  },
+
+  /**
+   * 그림 문제의 예시 명령(정답 한 가지)을 만듭니다.
+   * 붓을 뗀 채 시작해 [붓 누르기]로 시작하고, 아직 긋지 않은 선이 이어지면 그 선을 긋고,
+   * 막히면 붓을 떼고 가장 가까운 남은 선의 끝점으로 옮겨 다시 긋습니다.
+   * 목표 선을 모두 긋고 목표에 없는 선은 긋지 않으므로 그림은 항상 정답과 같지만,
+   * 최소 명령·최소 붓 이동이라는 보장은 없습니다(정답지에는 '예시'로 표시).
+   */
+  buildDrawingExampleCommands(startPos, targetLines = []) {
+    const unitLines = this.expandLinesToUnitSteps(targetLines) || [];
+    if (!startPos || unitLines.length === 0) return [];
+    const key = (x, y) => `${x},${y}`;
+    const edgeKey = (a, b) => [a, b].sort().join('|');
+    const remaining = new Map();
+    const adjacency = new Map();
+    for (const line of unitLines) {
+      const from = key(line.fromX, line.fromY);
+      const to = key(line.toX, line.toY);
+      remaining.set(edgeKey(from, to), true);
+      if (!adjacency.has(from)) adjacency.set(from, new Set());
+      if (!adjacency.has(to)) adjacency.set(to, new Set());
+      adjacency.get(from).add(to);
+      adjacency.get(to).add(from);
+    }
+    const parse = value => value.split(',').map(Number);
+    const directionBetween = (fromKey, toKey) => {
+      const [fx, fy] = parse(fromKey);
+      const [tx, ty] = parse(toKey);
+      const dx = Math.sign(tx - fx);
+      const dy = Math.sign(ty - fy);
+      return Object.values(DIRECTIONS).find(direction => direction.dx === dx && direction.dy === dy).id;
+    };
+    const unusedDegree = vertex => [...(adjacency.get(vertex) || [])]
+      .filter(next => remaining.has(edgeKey(vertex, next))).length;
+
+    const commands = [];
+    const pushMove = dir => {
+      const last = commands[commands.length - 1];
+      if (last && last.dir === dir) last.distance += 1;
+      else commands.push({ dir, distance: 1 });
+    };
+
+    let current = key(startPos.x, startPos.y);
+    let penDown = false;
+    let lastDirection = null;
+    while (remaining.size > 0) {
+      const options = [...(adjacency.get(current) || [])]
+        .filter(next => remaining.has(edgeKey(current, next)));
+      if (options.length > 0) {
+        if (!penDown) {
+          commands.push({ dir: 'PEN_DOWN', distance: 1 });
+          penDown = true;
+        }
+        // 같은 방향으로 이어 그으면 명령 묶음이 줄어든다. 다음으로 막다른 끝을 피한다.
+        options.sort((a, b) => (
+          Number(directionBetween(current, b) === lastDirection) - Number(directionBetween(current, a) === lastDirection) ||
+          (unusedDegree(b) > 1) - (unusedDegree(a) > 1)
+        ));
+        const next = options[0];
+        remaining.delete(edgeKey(current, next));
+        lastDirection = directionBetween(current, next);
+        pushMove(lastDirection);
+        current = next;
+        continue;
+      }
+      // 남은 선의 끝점 가운데 가장 가까운 곳(홀수 차수 우선)으로 붓을 떼고 이동한다.
+      const [cx, cy] = parse(current);
+      const candidates = [...adjacency.keys()].filter(vertex => unusedDegree(vertex) > 0);
+      candidates.sort((a, b) => {
+        const [ax, ay] = parse(a);
+        const [bx, by] = parse(b);
+        const distanceA = Math.max(Math.abs(ax - cx), Math.abs(ay - cy));
+        const distanceB = Math.max(Math.abs(bx - cx), Math.abs(by - cy));
+        return distanceA - distanceB || (unusedDegree(b) % 2) - (unusedDegree(a) % 2);
+      });
+      const target = candidates[0];
+      if (penDown) {
+        commands.push({ dir: 'PEN_UP', distance: 1 });
+        penDown = false;
+      }
+      let [x, y] = [cx, cy];
+      const [tx, ty] = parse(target);
+      while (x !== tx || y !== ty) {
+        const dx = Math.sign(tx - x);
+        const dy = Math.sign(ty - y);
+        pushMove(Object.values(DIRECTIONS).find(direction => direction.dx === dx && direction.dy === dy).id);
+        x += dx;
+        y += dy;
+      }
+      current = target;
+      lastDirection = null;
+    }
+    return commands;
+  },
+
+  /**
    * 최단 이동 거리와 서로 다른 1칸 단위 최단 경로의 수를 함께 계산합니다.
    * 경로 수는 학습 문제의 복수 정답 여부를 검증하는 용도로 사용하며,
    * 지나치게 큰 수는 안전한 정수 범위에서 고정합니다.

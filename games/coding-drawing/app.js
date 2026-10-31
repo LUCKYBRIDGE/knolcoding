@@ -432,6 +432,40 @@ export function assessMinimumCommandAttempt(level = {}, commands = [], result = 
   };
 }
 
+/**
+ * 결과창에 덧붙이는 '두 기준 비교' 문장. 최단 이동과 최소 명령은 판정에서는 서로 독립이지만,
+ * 같은 문제에서 두 답이 어떻게 다른지 보여 주면 기준에 따라 좋은 알고리즘이 달라진다는 점을 배울 수 있다.
+ */
+function withComparisonNote(note) {
+  return note ? `<br><br>${note}` : '';
+}
+
+export function getMissileRuleComparisonNote(level = {}, activeRule = 'shortest') {
+  if (!level.starPos || !level.goalPos) return '';
+  const comparison = CommandEngine.compareRouteRules(
+    level.starPos,
+    level.goalPos,
+    level.gridSize,
+    level.obstacles || []
+  );
+  if (!comparison) return '';
+  const {
+    shortestDistance,
+    commandsOnShortestRoute,
+    minimumCommandCount,
+    minimumCommandRouteDistance
+  } = comparison;
+  if (!Number.isFinite(commandsOnShortestRoute)) return '';
+  if (minimumCommandCount >= commandsOnShortestRoute) {
+    return '💡 이 문제는 가장 짧은 길로 가면서 명령도 가장 적게 쓸 수 있어요.';
+  }
+  const extraCells = minimumCommandRouteDistance - shortestDistance;
+  const savedCommands = commandsOnShortestRoute - minimumCommandCount;
+  return activeRule === 'minimum_commands'
+    ? `💡 기준을 바꾸면 답도 달라져요. <b>최단 이동</b>으로 풀면 ${shortestDistance}칸이면 되지만 명령이 ${commandsOnShortestRoute}개 필요해요. 지금은 ${extraCells}칸 더 가는 대신 명령을 ${savedCommands}개 줄였어요.`
+    : `💡 기준을 바꾸면 답도 달라져요. <b>최소 명령</b>으로 풀면 ${extraCells}칸 더 돌아가는 대신 명령을 ${minimumCommandCount}개로 줄일 수 있어요. 풀이 기준을 ‘최소 명령’으로 바꿔 도전해 보세요!`;
+}
+
 export function classifyMissileOutcome(mode, solutionRule, assessment = {}) {
   if (!assessment.reachedGoal) return 'miss';
   if (!['shortest', 'routing'].includes(mode)) return 'success';
@@ -6985,9 +7019,10 @@ export class App {
           title: isObstacleRoute
             ? '🧩 최소 명령으로 장애물 통과 성공!'
             : '🧩 최소 명령 미사일 이동 성공!',
-          desc: isObstacleRoute
+          desc: (isObstacleRoute
             ? `장애물을 안전하게 피하면서 가능한 가장 적은 <b>${minimumCommandCount}개 명령</b>으로 목표점에 도착했습니다.`
-            : `이동 칸 수와 관계없이 가능한 가장 적은 <b>${minimumCommandCount}개 명령</b>으로 목표점에 도착했습니다.`,
+            : `이동 칸 수와 관계없이 가능한 가장 적은 <b>${minimumCommandCount}개 명령</b>으로 목표점에 도착했습니다.`
+          ) + withComparisonNote(getMissileRuleComparisonNote(level, 'minimum_commands')),
           badge: `최소 명령 ${commandCount}개 · 실제 이동 ${traveledDistance}칸`,
           primaryBtnText: getNextProblemButtonLabel(this.currentMode, this.challengeType),
           onPrimary: () => this.loadLevel()
@@ -7006,9 +7041,10 @@ export class App {
           title: isObstacleRoute
             ? '🧱 최단 안전 경로로 장애물 통과 성공!'
             : '🎯 최단 경로 미사일 이동 성공!',
-          desc: isObstacleRoute
+          desc: (isObstacleRoute
             ? '모든 장애물을 피하면서 가능한 가장 짧은 경로로 목표점에 정확히 도착했습니다! 🎉'
-            : '축하합니다! 완벽한 알고리즘 순서로 미사일이 목표점을 정확히 맞혔습니다! 🎉',
+            : '축하합니다! 완벽한 알고리즘 순서로 미사일이 목표점을 정확히 맞혔습니다! 🎉'
+          ) + withComparisonNote(getMissileRuleComparisonNote(level, 'shortest')),
           badge: `🏆 최단 기록 달성: ${traveledDistance}칸 (최소 ${minOptimal}칸)`,
           primaryBtnText: getNextProblemButtonLabel(this.currentMode, this.challengeType),
           onPrimary: () => this.loadLevel()

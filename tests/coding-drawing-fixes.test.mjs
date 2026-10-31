@@ -69,3 +69,47 @@ test('활동지: 답 칸 수가 모범 답안 길이보다 모자라지 않다',
   }
   assert.ok(ADVANCED_PROBLEM_MODES.includes('chase'));
 });
+
+test('정답지: 그림 문제의 예시 명령은 모든 문제에서 목표 그림을 정확히 그린다', () => {
+  for (const mode of ['debug', 'debug_guide', 'single_stroke']) {
+    for (const level of levelsOf(mode)) {
+      const commands = CommandEngine.buildDrawingExampleCommands(level.starPos, level.targetLines);
+      assert.equal(commands[0].dir, 'PEN_DOWN', `${mode} ${level.title}`);
+      const result = CommandEngine.simulate(level.starPos, commands, level.gridSize, [], false);
+      assert.equal(result.hitWall, false, `${mode} ${level.title}`);
+      assert.equal(CommandEngine.compareLineFigures(result.lines, level.targetLines).isExactMatch, true, `${mode} ${level.title}`);
+    }
+  }
+});
+
+test('두 기준 비교: 최단 이동 예시와 최소 명령 예시가 실제로 그 기준을 만족한다', () => {
+  for (const mode of ['shortest', 'routing']) {
+    for (const level of levelsOf(mode)) {
+      const c = CommandEngine.compareRouteRules(level.starPos, level.goalPos, level.gridSize, level.obstacles || []);
+      const label = `${mode} ${level.title}`;
+      assert.ok(c, label);
+      const shortest = CommandEngine.simulate(level.starPos, c.shortestRouteCommands, level.gridSize, level.obstacles || []);
+      const minimum = CommandEngine.simulate(level.starPos, c.minimumCommandRoute, level.gridSize, level.obstacles || []);
+      for (const run of [shortest, minimum]) {
+        assert.deepEqual(run.finalPos, level.goalPos, label);
+        assert.equal(run.hitObstacle || run.hitWall, false, label);
+      }
+      assert.equal(c.shortestDistance, CommandEngine.getShortestDistance(level.starPos, level.goalPos, level.gridSize, level.obstacles || []), label);
+      assert.equal(c.minimumCommandRoute.length, c.minimumCommandCount, label);
+      assert.ok(c.minimumCommandRouteDistance >= c.shortestDistance, label);
+      if (Number.isFinite(c.commandsOnShortestRoute)) assert.ok(c.minimumCommandCount <= c.commandsOnShortestRoute, label);
+    }
+  }
+});
+
+test('두 기준 비교: 답이 다른 문제에서는 결과창에 차이를 알려 준다', async () => {
+  const { getMissileRuleComparisonNote } = await import('../games/coding-drawing/app.js');
+  const routing = levelsOf('routing');
+  const differing = routing.find(level => {
+    const c = CommandEngine.compareRouteRules(level.starPos, level.goalPos, level.gridSize, level.obstacles || []);
+    return Number.isFinite(c?.commandsOnShortestRoute) && c.minimumCommandCount < c.commandsOnShortestRoute;
+  });
+  assert.ok(differing, '장애물 문제 가운데 두 기준의 답이 다른 문제가 있어야 한다');
+  assert.match(getMissileRuleComparisonNote(differing, 'shortest'), /최소 명령/);
+  assert.match(getMissileRuleComparisonNote(differing, 'minimum_commands'), /최단 이동/);
+});

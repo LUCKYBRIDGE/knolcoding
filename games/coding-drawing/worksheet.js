@@ -48,7 +48,10 @@ export const WorksheetGenerator = {
 
     // 2. A4 페이지 단위 생성 (1페이지당 정확히 2문제)
     const totalProblemPages = Math.ceil(problems.length / 2);
-    const totalPages = includeAnswerKey ? totalProblemPages + 1 : totalProblemPages;
+    // 정답지는 그림이 들어가므로 한 쪽에 4문제씩 나눈다.
+    const answersPerPage = 4;
+    const totalAnswerPages = includeAnswerKey ? Math.ceil(problems.length / answersPerPage) : 0;
+    const totalPages = totalProblemPages + totalAnswerPages;
 
     for (let pageIdx = 0; pageIdx < totalProblemPages; pageIdx++) {
       const pageEl = document.createElement('div');
@@ -100,7 +103,7 @@ export const WorksheetGenerator = {
     }
 
     // 3. 선생님용 정답지 (Answer Key) 페이지 자동 생성
-    if (includeAnswerKey) {
+    for (let answerPage = 0; answerPage < totalAnswerPages; answerPage++) {
       const akPageEl = document.createElement('div');
       akPageEl.className = 'worksheet-page answer-key-page';
 
@@ -119,20 +122,18 @@ export const WorksheetGenerator = {
 
       const akContainer = document.createElement('div');
       akContainer.className = 'worksheet-problems-wrapper';
-      akContainer.style.gap = '10px';
+      akContainer.style.gap = '8px';
 
-      for (let idx = 0; idx < problems.length; idx++) {
-        const prob = problems[idx];
-        const akCard = this.createAnswerKeyCard(prob, idx + 1);
-        akContainer.appendChild(akCard);
+      const first = answerPage * answersPerPage;
+      for (let idx = first; idx < Math.min(problems.length, first + answersPerPage); idx++) {
+        akContainer.appendChild(this.createAnswerKeyCard(problems[idx], idx + 1));
       }
-
       akPageEl.appendChild(akContainer);
 
       const akFooter = document.createElement('div');
       akFooter.className = 'worksheet-footer';
       akFooter.innerHTML = `
-        <span>페이지 ${totalPages} / ${totalPages} (정답지)</span>
+        <span>페이지 ${totalProblemPages + answerPage + 1} / ${totalPages} (정답지)</span>
         <span>ⓒ 모눈종이 코딩 놀이터 교사용 정답 해설지</span>
       `;
       akPageEl.appendChild(akFooter);
@@ -380,74 +381,101 @@ export const WorksheetGenerator = {
   },
 
   /**
-   * 정답지 카드 HTML 생성
+   * 정답지 카드 왼쪽에 넣을 작은 그림. 그림 활동은 완성 그림, 미사일 활동은 최단 경로 예시를 그린다.
    */
+  renderAnswerThumbnail(problem, lines) {
+    const dpr = 2;
+    const canvas = document.createElement('canvas');
+    canvas.width = 260 * dpr;
+    canvas.height = 260 * dpr;
+    canvas.style.width = '260px';
+    canvas.style.height = '260px';
+    const renderer = new GridRenderer(canvas);
+    renderer.setGridSize(problem.gridSize || 7);
+    const isBrush = ['debug', 'debug_guide'].includes(problem.modeType);
+    renderer.setPlayerType(problem.modeType === 'chase' ? 'cop' : (isBrush ? 'brush' : 'missile'));
+    if (problem.starPos) renderer.setStarPos(problem.starPos.x, problem.starPos.y);
+    if (problem.goalPos) renderer.setGoalPos(problem.goalPos.x, problem.goalPos.y);
+    if (problem.thiefPos) renderer.setThiefPos(problem.thiefPos.x, problem.thiefPos.y);
+    if (problem.handcuffPos) renderer.setHandcuffPos(problem.handcuffPos.x, problem.handcuffPos.y);
+    if (problem.obstacles) renderer.setObstacles(problem.obstacles);
+    renderer.setShowTargetGuide(false);
+    if (lines && lines.length) renderer.setDrawnLines(lines);
+    renderer.render();
+    return canvas.toDataURL('image/png');
+  },
+
   createAnswerKeyCard(problem, problemNum) {
     const card = document.createElement('div');
     card.className = 'worksheet-answer-key-card';
+    const gridSize = problem.gridSize || 7;
+    const commandsText = commands => `<span class="ws-ak-step">${formatCommandCombination(commands)}</span>`;
 
     let solutionHTML = '';
+    let thumbnailLines = null;
 
-    if (problem.modeType === 'debug_guide' && problem.initialCommands) {
-      const steps = problem.initialCommands.map((c, idx) => {
-        return `<span class="ws-ak-step">${idx + 1}단계: ${formatCommandCombination([c])}</span>`;
-      }).join(' ➡️ ');
-      solutionHTML = `<div><b>정답 그림 경로:</b> ${steps} (주어진 명령어대로 모눈종이에 그림을 완성함)</div>`;
+    if (problem.modeType === 'debug_guide' && (problem.initialCommands || problem.targetLines)) {
+      thumbnailLines = problem.targetLines || [];
+      solutionHTML = `
+        <div><b>완성 그림:</b> 왼쪽 그림과 선이 모두 같으면 정답입니다.</div>
+        <div><b>주어진 명령어:</b> ${commandsText(problem.initialCommands || [])}</div>
+        <div>※ 선을 긋는 순서가 달라도, 빠진 선이나 더 그은 선이 없으면 정답으로 봅니다.</div>
+      `;
     } else if (problem.modeType === 'chase' && problem.thiefCommands) {
       const analysis = CommandEngine.analyzeChaseCapturePlans(
         problem.starPos,
         problem.thiefPos,
         problem.thiefCommands,
-        problem.gridSize || 7,
+        gridSize,
         problem.obstacles || [],
         problem.handcuffPos || null
       );
-      const steps = (analysis?.commands || []).map((command, index) => {
-        return `<span class="ws-ak-step">${index + 1}차례: ${formatCommandCombination([command])}</span>`;
-      }).join(' ➡️ ');
       solutionHTML = analysis
         ? `
-          <div><b>가장 이른 체포 모범 답안:</b> ${steps}</div>
-          ${problem.handcuffPos ? '<div><b>필수 조건:</b> 수갑 칸을 먼저 지난 뒤 도둑을 체포함</div>' : ''}
-          <div><b>체포 차례:</b> ${analysis.earliestTurn}차례 · <b>가능한 최적 명령열:</b> ${analysis.pathCount.toLocaleString('ko-KR')}가지</div>
-          <div>※ 위 답은 여러 최적 답안 중 한 예시이며, 같은 차례에 체포하는 다른 명령도 정답입니다.</div>
+          <div><b>가장 빨리 잡는 예시:</b> ${(analysis.commands || []).map((command, index) => `<span class="ws-ak-step">${index + 1}차례 ${formatCommandCombination([command])}</span>`).join(' ')}</div>
+          ${problem.handcuffPos ? '<div><b>꼭 확인:</b> 수갑 칸을 먼저 지난 뒤 도둑을 잡아야 합니다.</div>' : ''}
+          <div><b>잡는 차례:</b> ${analysis.earliestTurn}차례 · <b>같은 차례에 잡는 방법:</b> ${analysis.pathCount.toLocaleString('ko-KR')}가지</div>
         `
         : '<div><b>모범 답안 생성 실패:</b> 도둑을 체포할 수 있는 경로를 찾지 못했습니다.</div>';
     } else if (problem.starPos && problem.goalPos) {
-      const optCmds = CommandEngine.findShortestPath(
+      const comparison = CommandEngine.compareRouteRules(
         problem.starPos,
         problem.goalPos,
-        problem.gridSize || 7,
+        gridSize,
         problem.obstacles || []
       );
       const analysis = CommandEngine.analyzeShortestPaths(
         problem.starPos,
         problem.goalPos,
-        problem.gridSize || 7,
+        gridSize,
         problem.obstacles || []
       );
-      const steps = optCmds.map((c, idx) => {
-        return `<span class="ws-ak-step">${idx + 1}단계: ${formatCommandCombination([c])}</span>`;
-      }).join(' ➡️ ');
-      solutionHTML = optCmds.length > 0
-        ? `
-          <div><b>${(problem.obstacles || []).length > 0 ? '장애물을 피하는 최단 모범 답안' : '최단 모범 답안'}:</b> ${steps}</div>
-          <div><b>최단 이동:</b> ${analysis.distance}칸 · <b>가능한 최단 명령열:</b> ${analysis.pathCount.toLocaleString('ko-KR')}가지</div>
-          <div>※ 위 답은 여러 최단 답안 중 한 예시이며, 같은 길이의 다른 안전 경로도 정답입니다.</div>
-        `
-        : '<div><b>모범 답안 생성 실패:</b> 현재 배치에서는 목표점까지 이동할 수 없습니다.</div>';
+      if (comparison) {
+        thumbnailLines = CommandEngine.simulate(problem.starPos, comparison.shortestRouteCommands, gridSize, problem.obstacles || []).lines;
+        const differs = Number.isFinite(comparison.commandsOnShortestRoute)
+          && comparison.minimumCommandCount < comparison.commandsOnShortestRoute;
+        solutionHTML = `
+          <div><b>① 최단 이동 예시 (${comparison.shortestDistance}칸):</b> ${commandsText(comparison.shortestRouteCommands)}</div>
+          <div><b>② 최소 명령 예시 (${comparison.minimumCommandCount}개):</b> ${commandsText(comparison.minimumCommandRoute)} · 이동 ${comparison.minimumCommandRouteDistance}칸</div>
+          <div>${differs
+            ? `💡 두 기준의 답이 달라요. 가장 짧은 길로 가면 명령이 ${comparison.commandsOnShortestRoute}개 필요하지만, ${comparison.minimumCommandRouteDistance - comparison.shortestDistance}칸 더 돌아가면 ${comparison.minimumCommandCount}개로 줄어듭니다.`
+            : '💡 이 문제는 가장 짧은 길로 가면서 명령도 가장 적게 쓸 수 있어요.'}</div>
+          <div>※ 최단 이동 길은 모두 ${analysis.pathCount.toLocaleString('ko-KR')}가지입니다. 같은 칸 수의 다른 안전한 길도 정답입니다.</div>
+        `;
+      } else {
+        solutionHTML = '<div><b>모범 답안 생성 실패:</b> 현재 배치에서는 목표점까지 이동할 수 없습니다.</div>';
+      }
     } else if (problem.targetLines) {
-      const minimumDistance = CommandEngine.getMinimumDrawingDistance(
-        problem.starPos,
-        problem.targetLines
-      );
+      const example = CommandEngine.buildDrawingExampleCommands(problem.starPos, problem.targetLines);
+      thumbnailLines = problem.targetLines;
+      const minimumDistance = CommandEngine.getMinimumDrawingDistance(problem.starPos, problem.targetLines);
       solutionHTML = `
-        <div><b>그림 완성 기준:</b> 제시된 모든 선을 빠짐없이 그리고 목표에 없는 선을 추가하지 않습니다.</div>
+        <div><b>예시 명령 (${example.length}개):</b> ${commandsText(example)}</div>
         <div><b>최소 붓 이동:</b> ${minimumDistance}칸</div>
-        <div>※ 선을 그리는 순서·진행 방향·되짚는 위치가 달라도 최종 그림이 같으면 정답입니다.</div>
+        <div>※ 그림이 같으면 정답입니다. 선을 긋는 순서·방향, 같은 선을 다시 지난 횟수는 따지지 않습니다.</div>
       `;
     } else {
-      solutionHTML = `<div><b>모범 답안:</b> 주어진 모눈종이 교차점 좌표에 맞춰 순차 알고리즘 코딩 완료.</div>`;
+      solutionHTML = '<div><b>모범 답안:</b> 학생이 적은 명령어를 직접 따라가 목표에 도착하는지 확인해 주세요.</div>';
     }
 
     const modeNames = {
@@ -458,12 +486,16 @@ export const WorksheetGenerator = {
       chase: '👮‍♂️ 도둑 잡기'
     };
 
+    const thumbnail = this.renderAnswerThumbnail(problem, thumbnailLines);
     card.innerHTML = `
-      <div class="ws-ak-header">
-        [문제 ${problemNum}] ${modeNames[problem.modeType] || '알고리즘 문제'} (${problem.gridSize}x${problem.gridSize})
-      </div>
-      <div class="ws-ak-solution">
-        ${solutionHTML}
+      <img src="${thumbnail}" class="ws-ak-thumb" alt="정답 그림">
+      <div class="ws-ak-body">
+        <div class="ws-ak-header">
+          [문제 ${problemNum}] ${modeNames[problem.modeType] || '알고리즘 문제'} (${gridSize}x${gridSize})
+        </div>
+        <div class="ws-ak-solution">
+          ${solutionHTML}
+        </div>
       </div>
     `;
 

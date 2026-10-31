@@ -4581,8 +4581,27 @@ button, select, input, .dir-btn, .learning-mode-btn, .activity-tab-btn {
     border: 1.5px solid #000000;
     border-radius: 6px;
     padding: 8px 10px;
-    margin-bottom: 8px;
     background: #f8fafc;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    height: 57mm;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .ws-ak-thumb {
+    flex: none;
+    width: 46mm;
+    height: 46mm;
+    border: 1px solid #000000;
+    border-radius: 4px;
+    background: #ffffff;
+  }
+
+  .ws-ak-body {
+    flex: 1;
+    min-width: 0;
   }
 
   .ws-ak-header {
