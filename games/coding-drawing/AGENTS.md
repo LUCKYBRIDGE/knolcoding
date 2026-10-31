@@ -7,7 +7,8 @@
 ## Scope
 
 - 8방향 모눈종이 기반 알고리즘·컴퓨팅 사고 학습 웹앱을 관리한다.
-- 기준 프로젝트 경로는 `/Volumes/WAN2/apps/coding-drawing`이다.
+- 개발 기준은 GitHub `LUCKYBRIDGE/knolcoding` 저장소의 `games/coding-drawing/`이다(2026-10-31부터).
+- 로컬 작업 사본 `/Volumes/WAN2/apps/coding-drawing`은 GitHub의 최신 내용을 받아 맞춘다.
 - `/Users/baekjiyun/Desktop/WAN/`의 레거시 복사본과 `pinky-ne-site`의 배포용 복사본은 이 프로젝트에서 직접 수정하지 않는다.
 
 ## Source Of Truth
@@ -16,8 +17,8 @@
 - 테스트 기준: `tests/coding-drawing.test.mjs`.
 - 실행 환경 기준: `package.json`, `package-lock.json`, `.nvmrc`, `.node-version`.
 - `dist/`는 `npm run build`로 생성되는 결과물이므로 직접 수정하지 않는다.
-- 이 WAN2 프로젝트가 개발 기준이다. Pinky NE의 `games/coding-drawing/`은 검증본을 배포하기 위한 복사본이다.
-- Pinky NE 복사본에서 발생한 변경은 WAN2에 먼저 병합·검증한 뒤 배포한다. 두 복사본을 독립적으로 발전시키지 않는다.
+- 개선은 knolcoding 저장소에서 먼저 하고 검증한다. WAN2 로컬 사본과 Pinky NE의 `games/coding-drawing/`은 나중에 knolcoding의 최신 내용으로 덮어 맞춘다.
+- 로컬이나 Pinky NE 사본에서만 따로 고치지 않는다. 고쳐야 할 것이 생기면 knolcoding에 먼저 반영한다.
 
 ## Run And Verify
 
@@ -93,8 +94,8 @@
 
 ## Git And Release
 
-- 이 디렉터리는 WAN2의 기준 작업 사본이다.
-- 원격 저장소: 아직 없음.
+- 기준 저장소: `LUCKYBRIDGE/knolcoding` (놀코딩 사이트, `coding.knolquiz.com`). 이 활동은 `games/coding-drawing/`에 있다.
+- 테스트는 knolcoding 루트에서 `npm test`, 사이트 빌드는 `npm run build`로 확인한다.
 - 커밋·푸시·Pinky NE 배포는 명시적 요청이 있을 때만 수행한다.
 - Pinky NE 배포 저장소: `LUCKYBRIDGE/pinky-ne-site`, 기본 브랜치 `main`.
 - Pinky 반영 전 `npm run check`를 통과하고, Pinky 저장소에서도 `npm run test:coding-drawing`과 `npm run build`를 다시 실행한다.
@@ -102,4 +103,5 @@
 ## Migration Note
 
 - 2026-07-30에 레거시 작업공간의 Pinky NE 배포용 소스에서 WAN2로 이전했다.
-- 이후 개발 기준은 `/Volumes/WAN2/apps/coding-drawing`이다.
+- 이후 개발 기준은 `/Volumes/WAN2/apps/coding-drawing`이었다.
+- 2026-10-31부터 개발 기준을 GitHub `LUCKYBRIDGE/knolcoding`으로 옮겼다. WAN2 로컬 사본은 추후 이 저장소의 최신 내용으로 맞춘다.

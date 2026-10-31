@@ -2,7 +2,7 @@
 
 8방향 모눈종이에서 미사일 이동, 그림 알고리즘, 도둑 잡기, 문제 만들기를 연습하는 정적 웹앱입니다.
 
-이 폴더가 개발 기준입니다.
+개발 기준은 GitHub `LUCKYBRIDGE/knolcoding` 저장소의 이 폴더입니다(2026-10-31부터). 아래 로컬 경로의 사본은 추후 이 저장소의 최신 내용으로 맞춥니다.
 
 - macOS: `/Volumes/WAN2/apps/coding-drawing`
 - Windows: `<외장하드 문자>:\apps\coding-drawing`
